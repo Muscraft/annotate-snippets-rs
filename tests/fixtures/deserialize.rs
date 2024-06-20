@@ -1,8 +1,8 @@
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer};
 use std::ops::Range;
 
 use annotate_snippets::renderer::DEFAULT_TERM_WIDTH;
-use annotate_snippets::{Annotation, Level, Message, Renderer, Snippet};
+use annotate_snippets::{Annotation, AnnotationKind, Level, Message, Renderer, Snippet};
 
 #[derive(Deserialize)]
 pub(crate) struct Fixture<'a> {
@@ -106,36 +106,44 @@ where
     Ok(v.into_iter().map(|Wrapper(a)| a.into()).collect())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct AnnotationDef<'a> {
     pub range: Range<usize>,
     #[serde(borrow)]
-    pub label: &'a str,
-    #[serde(with = "LevelDef")]
-    pub level: Level,
+    pub label: Option<&'a str>,
+    #[serde(deserialize_with = "de_annotation_kind")]
+    pub kind: AnnotationKind,
 }
 
 impl<'a> From<AnnotationDef<'a>> for Annotation<'a> {
     fn from(val: AnnotationDef<'a>) -> Self {
-        let AnnotationDef {
-            range,
-            label,
-            level,
-        } = val;
-        level.span(range).label(label)
+        let AnnotationDef { range, label, kind } = val;
+        let mut annotation = kind.span(range);
+        if let Some(label) = label {
+            annotation = annotation.label(label);
+        }
+        annotation
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub(crate) struct LabelDef<'a> {
-    #[serde(with = "LevelDef")]
-    pub(crate) level: Level,
-    #[serde(borrow)]
-    pub(crate) label: &'a str,
+fn de_annotation_kind<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<AnnotationKind, D::Error> {
+    use serde::de::{Error, IntoDeserializer};
+    let str = String::deserialize(deserializer)?;
+    match str.as_str() {
+        "Message" => Ok(AnnotationKind::Message),
+        "Context" => Ok(AnnotationKind::Context),
+        _ => LevelDef::deserialize(str.clone().into_deserializer())
+            .map(AnnotationKind::Level)
+            .map_err(|_: toml::de::Error| {
+                D::Error::unknown_variant(&str, &["Message", "Context", "A Level"])
+            }),
+    }
 }
 
 #[allow(dead_code)]
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 #[serde(remote = "Level")]
 enum LevelDef {
     Error,

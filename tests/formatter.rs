@@ -1,4 +1,4 @@
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
 use snapbox::{assert_data_eq, str};
 
@@ -7,7 +7,7 @@ fn test_i_29() {
     let snippets = Level::Error.title("oops").snippet(
         Snippet::source("First line\r\nSecond oops line")
             .origin("<current file>")
-            .annotation(Level::Error.span(19..23).label("oops"))
+            .annotation(AnnotationKind::Message.span(19..23).label("oops"))
             .fold(true),
     );
     let expected = str![[r#"
@@ -28,7 +28,7 @@ fn test_point_to_double_width_characters() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("こんにちは、世界")
             .origin("<current file>")
-            .annotation(Level::Error.span(18..24).label("world")),
+            .annotation(AnnotationKind::Message.span(18..24).label("world")),
     );
 
     let expected = str![[r#"
@@ -49,7 +49,7 @@ fn test_point_to_double_width_characters_across_lines() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("おはよう\nございます")
             .origin("<current file>")
-            .annotation(Level::Error.span(6..22).label("Good morning")),
+            .annotation(AnnotationKind::Message.span(6..22).label("Good morning")),
     );
 
     let expected = str![[r#"
@@ -72,7 +72,7 @@ fn test_point_to_double_width_characters_multiple() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("お寿司\n食べたい🍣")
             .origin("<current file>")
-            .annotation(Level::Error.span(0..9).label("Sushi1"))
+            .annotation(AnnotationKind::Message.span(0..9).label("Sushi1"))
             .annotation(Level::Note.span(16..22).label("Sushi2")),
     );
 
@@ -96,7 +96,7 @@ fn test_point_to_double_width_characters_mixed() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("こんにちは、新しいWorld！")
             .origin("<current file>")
-            .annotation(Level::Error.span(18..32).label("New world")),
+            .annotation(AnnotationKind::Message.span(18..32).label("New world")),
     );
 
     let expected = str![[r#"
@@ -205,9 +205,11 @@ fn test_i26() {
     let source = "short";
     let label = "label";
     let input = Level::Error.title("").snippet(
-        Snippet::source(source)
-            .line_start(0)
-            .annotation(Level::Error.span(0..source.len() + 2).label(label)),
+        Snippet::source(source).line_start(0).annotation(
+            AnnotationKind::Message
+                .span(0..source.len() + 2)
+                .label(label),
+        ),
     );
     let renderer = Renderer::plain();
     let _ = renderer.render(input).to_string();
@@ -313,7 +315,7 @@ fn issue_130() {
             .origin("file/path")
             .line_start(3)
             .fold(true)
-            .annotation(Level::Error.span(4..11)), // bar\nbaz
+            .annotation(AnnotationKind::Message.span(4..11)), // bar\nbaz
     );
 
     let expected = str![[r#"
@@ -340,7 +342,7 @@ a\"
             .origin("file/path")
             .line_start(3)
             .fold(true)
-            .annotation(Level::Error.span(0..10)), // 1..10 works
+            .annotation(AnnotationKind::Message.span(0..10)), // 1..10 works
     );
     let expected = str![[r#"
 error
@@ -362,7 +364,7 @@ fn char_and_nl_annotate_char() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(0..2)), // a\r
+            .annotation(AnnotationKind::Message.span(0..2)), // a\r
     );
     let expected = str![[r#"
 error
@@ -383,7 +385,7 @@ fn char_eol_annotate_char() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(0..3)), // a\r\n
+            .annotation(AnnotationKind::Message.span(0..3)), // a\r\n
     );
     let expected = str![[r#"
 error
@@ -402,7 +404,7 @@ fn char_eol_annotate_char_double_width() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("こん\r\nにちは\r\n世界")
             .origin("<current file>")
-            .annotation(Level::Error.span(3..8)), // ん\r\n
+            .annotation(AnnotationKind::Message.span(3..8)), // ん\r\n
     );
 
     let expected = str![[r#"
@@ -427,7 +429,7 @@ fn annotate_eol() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(1..2)), // \r
+            .annotation(AnnotationKind::Message.span(1..2)), // \r
     );
     let expected = str![[r#"
 error
@@ -448,7 +450,7 @@ fn annotate_eol2() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(1..3)), // \r\n
+            .annotation(AnnotationKind::Message.span(1..3)), // \r\n
     );
     let expected = str![[r#"
 error
@@ -469,7 +471,7 @@ fn annotate_eol3() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(2..3)), // \n
+            .annotation(AnnotationKind::Message.span(2..3)), // \n
     );
     let expected = str![[r#"
 error
@@ -490,7 +492,7 @@ fn annotate_eol4() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(2..2)), // \n
+            .annotation(AnnotationKind::Message.span(2..2)), // \n
     );
     let expected = str![[r#"
 error
@@ -509,7 +511,7 @@ fn annotate_eol_double_width() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("こん\r\nにちは\r\n世界")
             .origin("<current file>")
-            .annotation(Level::Error.span(7..8)), // \n
+            .annotation(AnnotationKind::Message.span(7..8)), // \n
     );
 
     let expected = str![[r#"
@@ -534,7 +536,7 @@ fn multiline_eol_start() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(1..4)), // \r\nb
+            .annotation(AnnotationKind::Message.span(1..4)), // \r\nb
     );
     let expected = str![[r#"
 error
@@ -556,7 +558,7 @@ fn multiline_eol_start2() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(2..4)), // \nb
+            .annotation(AnnotationKind::Message.span(2..4)), // \nb
     );
     let expected = str![[r#"
 error
@@ -578,7 +580,7 @@ fn multiline_eol_start3() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(1..3)), // \nb
+            .annotation(AnnotationKind::Message.span(1..3)), // \nb
     );
     let expected = str![[r#"
 error
@@ -598,7 +600,7 @@ fn multiline_eol_start_double_width() {
     let snippets = Level::Error.title("").snippet(
         Snippet::source("こん\r\nにちは\r\n世界")
             .origin("<current file>")
-            .annotation(Level::Error.span(7..11)), // \r\nに
+            .annotation(AnnotationKind::Message.span(7..11)), // \r\nに
     );
 
     let expected = str![[r#"
@@ -624,7 +626,7 @@ fn multiline_eol_start_eol_end() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(1..4)), // \nb\n
+            .annotation(AnnotationKind::Message.span(1..4)), // \nb\n
     );
     let expected = str![[r#"
 error
@@ -648,7 +650,7 @@ fn multiline_eol_start_eol_end2() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(2..5)), // \nb\r
+            .annotation(AnnotationKind::Message.span(2..5)), // \nb\r
     );
     let expected = str![[r#"
 error
@@ -672,7 +674,7 @@ fn multiline_eol_start_eol_end3() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(2..6)), // \nb\r\n
+            .annotation(AnnotationKind::Message.span(2..6)), // \nb\r\n
     );
     let expected = str![[r#"
 error
@@ -696,7 +698,7 @@ fn multiline_eol_start_eof_end() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(1..5)), // \r\nb(EOF)
+            .annotation(AnnotationKind::Message.span(1..5)), // \r\nb(EOF)
     );
     let expected = str![[r#"
 error
@@ -719,7 +721,7 @@ fn multiline_eol_start_eof_end_double_width() {
         Snippet::source(source)
             .origin("file/path")
             .line_start(3)
-            .annotation(Level::Error.span(3..9)), // \r\nに(EOF)
+            .annotation(AnnotationKind::Message.span(3..9)), // \r\nに(EOF)
     );
     let expected = str![[r#"
 error
@@ -743,7 +745,7 @@ fn two_single_line_same_line() {
             .origin("Cargo.toml")
             .line_start(4)
             .annotation(
-                Level::Error
+                AnnotationKind::Message
                     .span(0..3)
                     .label("I need this to be really long so I can test overlaps"),
             )
@@ -778,7 +780,7 @@ bar = { version = "0.1.0", optional = true }
         Snippet::source(source)
             .line_start(4)
             .annotation(
-                Level::Error
+                AnnotationKind::Message
                     .span(41..119)
                     .label("I need this to be really long so I can test overlaps"),
             )
@@ -816,12 +818,12 @@ bar = { version = "0.1.0", optional = true }
         Snippet::source(source)
             .line_start(4)
             .annotation(
-                Level::Error
+                AnnotationKind::Message
                     .span(41..119)
                     .label("I need this to be really long so I can test overlaps"),
             )
             .annotation(
-                Level::Error
+                AnnotationKind::Context
                     .span(8..102)
                     .label("I need this to be really long so I can test overlaps"),
             )
@@ -835,14 +837,14 @@ bar = { version = "0.1.0", optional = true }
 error: unused optional dependency
   |
 4 |    bar = { version = "0.1.0", optional = true }
-  |   _________^__________________--------------^
+  |   _________-__________________--------------^
   |  |         |                  |
   |  |_________|                  info: This should also be long but not too long
   | ||
 5 | || this is another line
 6 | || so is this
 7 | || bar = { version = "0.1.0", optional = true }
-  | ||_________________________^________________^ I need this to be really long so I can test overlaps
+  | ||_________________________-________________^ I need this to be really long so I can test overlaps
   | |__________________________|
   |                            I need this to be really long so I can test overlaps
   |
@@ -863,17 +865,17 @@ this is another line
         Snippet::source(source)
             .line_start(4)
             .annotation(
-                Level::Error
+                AnnotationKind::Message
                     .span(41..119)
                     .label("I need this to be really long so I can test overlaps"),
             )
             .annotation(
-                Level::Error
+                AnnotationKind::Message
                     .span(8..102)
                     .label("I need this to be really long so I can test overlaps"),
             )
             .annotation(
-                Level::Error
+                AnnotationKind::Message
                     .span(48..126)
                     .label("I need this to be really long so I can test overlaps"),
             )

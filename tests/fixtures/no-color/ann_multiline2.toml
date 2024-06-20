@@ -14,5 +14,5 @@ origin = "foo.txt"
 fold = false
 [[message.snippets.annotations]]
 label = "this should not be on separate lines"
-level = "Error"
+kind = "Message"
 range = [11, 19]

@@ -33,9 +33,9 @@ origin = "src/format.rs"
 fold = true
 [[message.snippets.annotations]]
 label = "expected `std::option::Option<std::string::String>` because of return type"
-level = "Warning"
+kind = "Context"
 range = [5, 19]
 [[message.snippets.annotations]]
 label = "expected enum `std::option::Option`, found ()"
-level = "Error"
+kind = "Message"
 range = [22, 766]

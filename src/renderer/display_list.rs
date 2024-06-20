@@ -31,22 +31,15 @@
 //! styling.
 //!
 //! The above snippet has been built out of the following structure:
-use crate::snippet;
+use crate::{snippet, AnnotationKind, Level};
 use std::cmp::{max, min, Reverse};
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::ops::Range;
 use std::{cmp, fmt};
 
-use crate::renderer::styled_buffer::StyledBuffer;
-use crate::renderer::{stylesheet::Stylesheet, Margin, Style, DEFAULT_TERM_WIDTH};
-
-const ANONYMIZED_LINE_NUM: &str = "LL";
-const ERROR_TXT: &str = "error";
-const HELP_TXT: &str = "help";
-const INFO_TXT: &str = "info";
-const NOTE_TXT: &str = "note";
-const WARNING_TXT: &str = "warning";
+use super::styled_buffer::StyledBuffer;
+use super::{stylesheet::Stylesheet, Margin, Style, ANONYMIZED_LINE_NUM, DEFAULT_TERM_WIDTH};
 
 /// List of lines to be displayed.
 pub(crate) struct DisplayList<'a> {
@@ -152,6 +145,7 @@ impl<'a> DisplayList<'a> {
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct DisplaySet<'a> {
+    pub(crate) level: Level,
     pub(crate) display_lines: Vec<DisplayLine<'a>>,
     pub(crate) margin: Margin,
 }
@@ -166,53 +160,12 @@ impl<'a> DisplaySet<'a> {
     ) -> fmt::Result {
         for fragment in label {
             let style = match fragment.style {
-                DisplayTextStyle::Regular => stylesheet.none(),
-                DisplayTextStyle::Emphasis => stylesheet.emphasis(),
+                DisplayTextStyle::Regular => stylesheet.none,
+                DisplayTextStyle::Emphasis => stylesheet.emphasis,
             };
-            buffer.append(line_offset, fragment.content, *style);
+            buffer.append(line_offset, fragment.content, style);
         }
         Ok(())
-    }
-    fn format_annotation(
-        &self,
-        line_offset: usize,
-        annotation: &Annotation<'_>,
-        continuation: bool,
-        stylesheet: &Stylesheet,
-        buffer: &mut StyledBuffer,
-    ) -> fmt::Result {
-        let color = get_annotation_style(&annotation.annotation_type, stylesheet);
-        let formatted_len = if let Some(id) = &annotation.id {
-            2 + id.len() + annotation_type_len(&annotation.annotation_type)
-        } else {
-            annotation_type_len(&annotation.annotation_type)
-        };
-
-        if continuation {
-            for _ in 0..formatted_len + 2 {
-                buffer.append(line_offset, " ", Style::new());
-            }
-            return self.format_label(line_offset, &annotation.label, stylesheet, buffer);
-        }
-        if formatted_len == 0 {
-            self.format_label(line_offset, &annotation.label, stylesheet, buffer)
-        } else {
-            let id = match &annotation.id {
-                Some(id) => format!("[{}]", id),
-                None => String::new(),
-            };
-            buffer.append(
-                line_offset,
-                &format!("{}{}", annotation_type_str(&annotation.annotation_type), id),
-                *color,
-            );
-
-            if !is_annotation_empty(annotation) {
-                buffer.append(line_offset, ": ", stylesheet.none);
-                self.format_label(line_offset, &annotation.label, stylesheet, buffer)?;
-            }
-            Ok(())
-        }
     }
 
     #[inline]
@@ -234,8 +187,7 @@ impl<'a> DisplaySet<'a> {
                     DisplayHeaderType::Initial => "-->",
                     DisplayHeaderType::Continuation => ":::",
                 };
-                let lineno_color = stylesheet.line_no();
-                buffer.puts(line_offset, lineno_width, header_sigil, *lineno_color);
+                buffer.puts(line_offset, lineno_width, header_sigil, stylesheet.line_no);
                 buffer.puts(line_offset, lineno_width + 4, path, stylesheet.none);
                 if let Some((col, row)) = pos {
                     buffer.append(line_offset, ":", stylesheet.none);
@@ -246,7 +198,9 @@ impl<'a> DisplaySet<'a> {
                 Ok(())
             }
             DisplayRawLine::Annotation {
-                annotation,
+                kind,
+                id,
+                label,
                 source_aligned,
                 continuation,
             } => {
@@ -256,15 +210,41 @@ impl<'a> DisplaySet<'a> {
                             buffer.append(line_offset, " ", stylesheet.none);
                         }
                     } else {
-                        let lineno_color = stylesheet.line_no();
                         for _ in 0..lineno_width + 1 {
                             buffer.append(line_offset, " ", stylesheet.none);
                         }
-                        buffer.append(line_offset, "=", *lineno_color);
-                        buffer.append(line_offset, " ", *lineno_color);
+                        buffer.append(line_offset, "=", stylesheet.line_no);
+                        buffer.append(line_offset, " ", stylesheet.line_no);
                     }
                 }
-                self.format_annotation(line_offset, annotation, *continuation, stylesheet, buffer)
+                let style = kind.style(self.level, stylesheet);
+                let formatted_len = if let Some(id) = id {
+                    2 + id.len() + kind.as_str().len()
+                } else {
+                    kind.as_str().len()
+                };
+
+                if *continuation {
+                    for _ in 0..formatted_len + 2 {
+                        buffer.append(line_offset, " ", Style::new());
+                    }
+                    return self.format_label(line_offset, label, stylesheet, buffer);
+                }
+                if formatted_len == 0 {
+                    self.format_label(line_offset, label, stylesheet, buffer)
+                } else {
+                    let id = match id {
+                        Some(id) => format!("[{}]", id),
+                        None => String::new(),
+                    };
+                    buffer.append(line_offset, &format!("{}{}", kind.as_str(), id), style);
+
+                    if !is_label_empty(label) {
+                        buffer.append(line_offset, ": ", stylesheet.none);
+                        self.format_label(line_offset, label, stylesheet, buffer)?;
+                    }
+                    Ok(())
+                }
             }
         }
     }
@@ -288,18 +268,17 @@ impl<'a> DisplaySet<'a> {
                 line,
                 annotations,
             } => {
-                let lineno_color = stylesheet.line_no();
                 if anonymized_line_numbers && lineno.is_some() {
                     let num = format!("{:>width$} |", ANONYMIZED_LINE_NUM, width = lineno_width);
-                    buffer.puts(line_offset, 0, &num, *lineno_color);
+                    buffer.puts(line_offset, 0, &num, stylesheet.line_no);
                 } else {
                     match lineno {
                         Some(n) => {
                             let num = format!("{:>width$} |", n, width = lineno_width);
-                            buffer.puts(line_offset, 0, &num, *lineno_color);
+                            buffer.puts(line_offset, 0, &num, stylesheet.line_no);
                         }
                         None => {
-                            buffer.putc(line_offset, lineno_width + 1, '|', *lineno_color);
+                            buffer.putc(line_offset, lineno_width + 1, '|', stylesheet.line_no);
                         }
                     };
                 }
@@ -316,6 +295,7 @@ impl<'a> DisplaySet<'a> {
                     // Add any inline marks to the code line
                     if !inline_marks.is_empty() || 0 < multiline_depth {
                         format_inline_marks(
+                            self.level,
                             line_offset,
                             inline_marks,
                             lineno_width,
@@ -350,10 +330,15 @@ impl<'a> DisplaySet<'a> {
                     buffer.puts(line_offset, code_offset, &code, Style::new());
                     if self.margin.was_cut_left() {
                         // We have stripped some code/whitespace from the beginning, make it clear.
-                        buffer.puts(line_offset, code_offset, "...", *lineno_color);
+                        buffer.puts(line_offset, code_offset, "...", stylesheet.line_no);
                     }
                     if self.margin.was_cut_right(line_len) {
-                        buffer.puts(line_offset, code_offset + taken - 3, "...", *lineno_color);
+                        buffer.puts(
+                            line_offset,
+                            code_offset + taken - 3,
+                            "...",
+                            stylesheet.line_no,
+                        );
                     }
 
                     let left: usize = text
@@ -396,7 +381,6 @@ impl<'a> DisplaySet<'a> {
                         for (j, next) in annotations.iter().enumerate() {
                             if j > i {
                                 let l = next
-                                    .annotation
                                     .label
                                     .iter()
                                     .map(|label| label.content)
@@ -504,8 +488,8 @@ impl<'a> DisplaySet<'a> {
                             })
                     {
                         let (_, ann) = annotations_positions.remove(0);
-                        let style = get_annotation_style(&ann.annotation_type, stylesheet);
-                        buffer.putc(line_offset, 3 + lineno_width, '/', *style);
+                        let style = ann.kind.style(self.level, stylesheet);
+                        buffer.putc(line_offset, 3 + lineno_width, '/', style);
                     }
 
                     // Draw the column separator for any extra lines that were
@@ -544,7 +528,7 @@ impl<'a> DisplaySet<'a> {
                     // 4 |   }
                     //   |  _
                     for &(pos, annotation) in &annotations_positions {
-                        let style = get_annotation_style(&annotation.annotation_type, stylesheet);
+                        let style = annotation.kind.style(self.level, stylesheet);
                         let pos = pos + 1;
                         match annotation.annotation_part {
                             DisplayAnnotationPart::MultilineStart(depth)
@@ -552,7 +536,7 @@ impl<'a> DisplaySet<'a> {
                                 for col in width_offset + depth
                                     ..(code_offset + annotation.range.0).saturating_sub(left)
                                 {
-                                    buffer.putc(line_offset + pos, col + 1, '_', *style);
+                                    buffer.putc(line_offset + pos, col + 1, '_', style);
                                 }
                             }
                             _ => {}
@@ -571,7 +555,7 @@ impl<'a> DisplaySet<'a> {
                     // 4 | | }
                     //   | |_
                     for &(pos, annotation) in &annotations_positions {
-                        let style = get_annotation_style(&annotation.annotation_type, stylesheet);
+                        let style = annotation.kind.style(self.level, stylesheet);
                         let pos = pos + 1;
                         if pos > 1 && (annotation.has_label() || annotation.takes_space()) {
                             for p in line_offset + 2..=line_offset + pos {
@@ -579,19 +563,19 @@ impl<'a> DisplaySet<'a> {
                                     p,
                                     (code_offset + annotation.range.0).saturating_sub(left),
                                     '|',
-                                    *style,
+                                    style,
                                 );
                             }
                         }
                         match annotation.annotation_part {
                             DisplayAnnotationPart::MultilineStart(depth) => {
                                 for p in line_offset + pos + 1..line_offset + line_len + 2 {
-                                    buffer.putc(p, width_offset + depth, '|', *style);
+                                    buffer.putc(p, width_offset + depth, '|', style);
                                 }
                             }
                             DisplayAnnotationPart::MultilineEnd(depth) => {
                                 for p in line_offset..=line_offset + pos {
-                                    buffer.putc(p, width_offset + depth, '|', *style);
+                                    buffer.putc(p, width_offset + depth, '|', style);
                                 }
                             }
                             _ => {}
@@ -602,12 +586,12 @@ impl<'a> DisplaySet<'a> {
                     // been created. Output should look like above.
                     for inline_mark in inline_marks {
                         let DisplayMarkType::AnnotationThrough(depth) = inline_mark.mark_type;
-                        let style = get_annotation_style(&inline_mark.annotation_type, stylesheet);
+                        let style = inline_mark.kind.style(self.level, stylesheet);
                         if annotations_positions.is_empty() {
-                            buffer.putc(line_offset, width_offset + depth, '|', *style);
+                            buffer.putc(line_offset, width_offset + depth, '|', style);
                         } else {
                             for p in line_offset..=line_offset + line_len + 1 {
-                                buffer.putc(p, width_offset + depth, '|', *style);
+                                buffer.putc(p, width_offset + depth, '|', style);
                             }
                         }
                     }
@@ -624,15 +608,9 @@ impl<'a> DisplaySet<'a> {
                     // 4 |   }
                     //   |  _  test
                     for &(pos, annotation) in &annotations_positions {
-                        if !is_annotation_empty(&annotation.annotation) {
-                            let style =
-                                get_annotation_style(&annotation.annotation_type, stylesheet);
-                            let mut formatted_len = if let Some(id) = &annotation.annotation.id {
-                                2 + id.len()
-                                    + annotation_type_len(&annotation.annotation.annotation_type)
-                            } else {
-                                annotation_type_len(&annotation.annotation.annotation_type)
-                            };
+                        if !is_label_empty(&annotation.label) {
+                            let style = annotation.kind.style(self.level, stylesheet);
+                            let mut formatted_len = annotation.kind.as_str().len();
                             let (pos, col) = if pos == 0 {
                                 (pos + 1, (annotation.range.1 + 1).saturating_sub(left))
                             } else {
@@ -644,27 +622,19 @@ impl<'a> DisplaySet<'a> {
                                 formatted_len = 0;
                             } else if formatted_len != 0 {
                                 formatted_len += 2;
-                                let id = match &annotation.annotation.id {
-                                    Some(id) => format!("[{}]", id),
-                                    None => String::new(),
-                                };
                                 buffer.puts(
                                     line_offset + pos,
                                     col + code_offset,
-                                    &format!(
-                                        "{}{}: ",
-                                        annotation_type_str(&annotation.annotation_type),
-                                        id
-                                    ),
-                                    *style,
+                                    &format!("{}: ", annotation.kind.as_str()),
+                                    style,
                                 );
                             } else {
                                 formatted_len = 0;
                             }
                             let mut before = 0;
-                            for fragment in &annotation.annotation.label {
+                            for fragment in &annotation.label {
                                 let inner_col = before + formatted_len + col + code_offset;
-                                buffer.puts(line_offset + pos, inner_col, fragment.content, *style);
+                                buffer.puts(line_offset + pos, inner_col, fragment.content, style);
                                 before += fragment.content.len();
                             }
                         }
@@ -679,8 +649,8 @@ impl<'a> DisplaySet<'a> {
                     //   | |  something about `foo`
                     //   | something about `fn foo()`
                     annotations_positions.sort_by_key(|(_, ann)| {
-                        // Decreasing order. When annotations share the same length, prefer `Primary`.
-                        Reverse(ann.len())
+                        // Decreasing order. When annotations share the same length, prefer `Message`.
+                        (Reverse(ann.len()), ann.is_message())
                     });
 
                     // Write the underlines.
@@ -695,26 +665,20 @@ impl<'a> DisplaySet<'a> {
                     // 4 |   }
                     //   |  _^  test
                     for &(_, annotation) in &annotations_positions {
-                        let mark = match annotation.annotation_type {
-                            DisplayAnnotationType::Error => '^',
-                            DisplayAnnotationType::Warning => '-',
-                            DisplayAnnotationType::Info => '-',
-                            DisplayAnnotationType::Note => '-',
-                            DisplayAnnotationType::Help => '-',
-                            DisplayAnnotationType::None => ' ',
-                        };
-                        let style = get_annotation_style(&annotation.annotation_type, stylesheet);
+                        let mark = annotation.kind.mark();
+                        let style = annotation.kind.style(self.level, stylesheet);
                         for p in annotation.range.0..annotation.range.1 {
                             buffer.putc(
                                 line_offset + 1,
                                 (code_offset + p).saturating_sub(left),
                                 mark,
-                                *style,
+                                style,
                             );
                         }
                     }
                 } else if !inline_marks.is_empty() {
                     format_inline_marks(
+                        self.level,
                         line_offset,
                         inline_marks,
                         lineno_width,
@@ -725,9 +689,10 @@ impl<'a> DisplaySet<'a> {
                 Ok(())
             }
             DisplayLine::Fold { inline_marks } => {
-                buffer.puts(line_offset, 0, "...", *stylesheet.line_no());
+                buffer.puts(line_offset, 0, "...", stylesheet.line_no);
                 if !inline_marks.is_empty() || 0 < multiline_depth {
                     format_inline_marks(
+                        self.level,
                         line_offset,
                         inline_marks,
                         lineno_width,
@@ -742,14 +707,6 @@ impl<'a> DisplaySet<'a> {
             }
         }
     }
-}
-
-/// Inline annotation which can be used in either Raw or Source line.
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Annotation<'a> {
-    pub(crate) annotation_type: DisplayAnnotationType,
-    pub(crate) id: Option<&'a str>,
-    pub(crate) label: Vec<DisplayTextFragment<'a>>,
 }
 
 /// A single line used in `DisplayList`.
@@ -785,19 +742,15 @@ pub(crate) enum DisplaySourceLine<'a> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct DisplaySourceAnnotation<'a> {
-    pub(crate) annotation: Annotation<'a>,
+    pub(crate) kind: AnnotationKind,
+    pub(crate) label: Vec<DisplayTextFragment<'a>>,
     pub(crate) range: (usize, usize),
-    pub(crate) annotation_type: DisplayAnnotationType,
     pub(crate) annotation_part: DisplayAnnotationPart,
 }
 
 impl<'a> DisplaySourceAnnotation<'a> {
     fn has_label(&self) -> bool {
-        !self
-            .annotation
-            .label
-            .iter()
-            .all(|label| label.content.is_empty())
+        !self.label.iter().all(|label| label.content.is_empty())
     }
 
     // Length of this annotation as displayed in the stderr output
@@ -817,6 +770,10 @@ impl<'a> DisplaySourceAnnotation<'a> {
             DisplayAnnotationPart::MultilineStart(_) | DisplayAnnotationPart::MultilineEnd(_)
         )
     }
+
+    fn is_message(&self) -> bool {
+        self.kind == AnnotationKind::Message
+    }
 }
 
 /// Raw line - a line which does not have the `lineno` part and is not considered
@@ -833,7 +790,9 @@ pub(crate) enum DisplayRawLine<'a> {
 
     /// An annotation line which is not part of any snippet.
     Annotation {
-        annotation: Annotation<'a>,
+        kind: AnnotationKind,
+        id: Option<&'a str>,
+        label: Vec<DisplayTextFragment<'a>>,
 
         /// If set to `true`, the annotation will be aligned to the
         /// lineno delimiter of the snippet.
@@ -879,7 +838,7 @@ pub(crate) enum DisplayAnnotationPart {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct DisplayMark {
     pub(crate) mark_type: DisplayMarkType,
-    pub(crate) annotation_type: DisplayAnnotationType,
+    pub(crate) kind: AnnotationKind,
 }
 
 /// A type of the `DisplayMark`.
@@ -887,35 +846,6 @@ pub(crate) struct DisplayMark {
 pub(crate) enum DisplayMarkType {
     /// A mark indicating a multiline annotation going through the current line.
     AnnotationThrough(usize),
-}
-
-/// A type of the `Annotation` which may impact the sigils, style or text displayed.
-///
-/// There are several ways to uses this information when formatting the `DisplayList`:
-///
-/// * An annotation may display the name of the type like `error` or `info`.
-/// * An underline for `Error` may be `^^^` while for `Warning` it could be `---`.
-/// * `ColorStylesheet` may use different colors for different annotations.
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) enum DisplayAnnotationType {
-    None,
-    Error,
-    Warning,
-    Info,
-    Note,
-    Help,
-}
-
-impl From<snippet::Level> for DisplayAnnotationType {
-    fn from(at: snippet::Level) -> Self {
-        match at {
-            snippet::Level::Error => DisplayAnnotationType::Error,
-            snippet::Level::Warning => DisplayAnnotationType::Warning,
-            snippet::Level::Info => DisplayAnnotationType::Info,
-            snippet::Level::Note => DisplayAnnotationType::Note,
-            snippet::Level::Help => DisplayAnnotationType::Help,
-        }
-    }
 }
 
 /// Information whether the header is the initial one or a consequitive one
@@ -1000,6 +930,7 @@ fn format_message(
     for (idx, snippet) in snippets.into_iter().enumerate() {
         let snippet = fold_prefix_suffix(snippet);
         sets.push(format_snippet(
+            level,
             snippet,
             idx == 0,
             !footer.is_empty(),
@@ -1014,6 +945,7 @@ fn format_message(
         }
     } else {
         sets.push(DisplaySet {
+            level,
             display_lines: body,
             margin: Margin::new(0, 0, 0, 0, DEFAULT_TERM_WIDTH, 0),
         });
@@ -1031,31 +963,23 @@ fn format_message(
     sets
 }
 
-fn format_title<'a>(level: crate::Level, id: Option<&'a str>, label: &'a str) -> DisplayLine<'a> {
+fn format_title<'a>(level: Level, id: Option<&'a str>, label: &'a str) -> DisplayLine<'a> {
     DisplayLine::Raw(DisplayRawLine::Annotation {
-        annotation: Annotation {
-            annotation_type: DisplayAnnotationType::from(level),
-            id,
-            label: format_label(Some(label), Some(DisplayTextStyle::Emphasis)),
-        },
+        kind: AnnotationKind::Level(level),
+        id,
+        label: format_label(Some(label), Some(DisplayTextStyle::Emphasis)),
         source_aligned: false,
         continuation: false,
     })
 }
 
-fn format_footer<'a>(
-    level: crate::Level,
-    id: Option<&'a str>,
-    label: &'a str,
-) -> Vec<DisplayLine<'a>> {
+fn format_footer<'a>(level: Level, id: Option<&'a str>, label: &'a str) -> Vec<DisplayLine<'a>> {
     let mut result = vec![];
     for (i, line) in label.lines().enumerate() {
         result.push(DisplayLine::Raw(DisplayRawLine::Annotation {
-            annotation: Annotation {
-                annotation_type: DisplayAnnotationType::from(level),
-                id,
-                label: format_label(Some(line), None),
-            },
+            kind: AnnotationKind::Level(level),
+            id,
+            label: format_label(Some(line), None),
             source_aligned: true,
             continuation: i != 0,
         }));
@@ -1079,6 +1003,7 @@ fn format_label(
 }
 
 fn format_snippet(
+    level: Level,
     snippet: snippet::Snippet<'_>,
     is_first: bool,
     has_footer: bool,
@@ -1089,6 +1014,7 @@ fn format_snippet(
     let origin = snippet.origin;
     let need_empty_header = origin.is_some() || is_first;
     let mut body = format_body(
+        level,
         snippet,
         need_empty_header,
         has_footer,
@@ -1266,6 +1192,7 @@ fn fold_body(body: Vec<DisplayLine<'_>>) -> Vec<DisplayLine<'_>> {
 }
 
 fn format_body(
+    level: Level,
     snippet: snippet::Snippet<'_>,
     need_empty_header: bool,
     has_footer: bool,
@@ -1394,11 +1321,11 @@ fn format_body(
         // It would be nice to use filter_drain here once it's stable.
         annotations.retain(|(key, annotation)| {
             let body_idx = idx;
-            let annotation_type = match annotation.level {
-                snippet::Level::Error => DisplayAnnotationType::None,
-                snippet::Level::Warning => DisplayAnnotationType::None,
-                _ => DisplayAnnotationType::from(annotation.level),
-            };
+            // let annotation_type = match annotation.level {
+            //     snippet::Level::Error => DisplayAnnotationType::None,
+            //     snippet::Level::Warning => DisplayAnnotationType::None,
+            //     _ => DisplayAnnotationType::from(annotation.level),
+            // };
             let label_right = annotation.label.map_or(0, |label| label.len() + 1);
             match annotation.range {
                 // This handles if the annotation is on the next line. We add
@@ -1439,13 +1366,9 @@ fn format_body(
 
                         let range = (annotation_start_col, annotation_end_col);
                         annotations.push(DisplaySourceAnnotation {
-                            annotation: Annotation {
-                                annotation_type,
-                                id: None,
-                                label: format_label(annotation.label, None),
-                            },
+                            kind: annotation.kind,
+                            label: format_label(annotation.label, None),
                             range,
-                            annotation_type: DisplayAnnotationType::from(annotation.level),
                             annotation_part: DisplayAnnotationPart::Standalone,
                         });
                     }
@@ -1478,13 +1401,9 @@ fn format_body(
 
                         let range = (annotation_start_col, annotation_end_col);
                         annotations.push(DisplaySourceAnnotation {
-                            annotation: Annotation {
-                                annotation_type,
-                                id: None,
-                                label: vec![],
-                            },
+                            kind: annotation.kind,
+                            label: vec![],
                             range,
-                            annotation_type: DisplayAnnotationType::from(annotation.level),
                             annotation_part: DisplayAnnotationPart::MultilineStart(current_depth),
                         });
                         depth_map.insert(*key, current_depth);
@@ -1505,7 +1424,7 @@ fn format_body(
                         let depth = depth_map.get(key).cloned().unwrap_or_default();
                         inline_marks.push(DisplayMark {
                             mark_type: DisplayMarkType::AnnotationThrough(depth),
-                            annotation_type: DisplayAnnotationType::from(annotation.level),
+                            kind: annotation.kind,
                         });
                     }
                     true
@@ -1547,13 +1466,9 @@ fn format_body(
                         let range = (end_mark, end_plus_one);
                         let depth = depth_map.remove(key).unwrap_or(0);
                         annotations.push(DisplaySourceAnnotation {
-                            annotation: Annotation {
-                                annotation_type,
-                                id: None,
-                                label: format_label(annotation.label, None),
-                            },
+                            kind: annotation.kind,
+                            label: format_label(annotation.label, None),
                             range,
-                            annotation_type: DisplayAnnotationType::from(annotation.level),
                             annotation_part: DisplayAnnotationPart::MultilineEnd(depth),
                         });
                     }
@@ -1623,54 +1538,15 @@ fn format_body(
     );
 
     DisplaySet {
+        level,
         display_lines: body,
         margin,
     }
 }
 
 #[inline]
-fn annotation_type_str(annotation_type: &DisplayAnnotationType) -> &'static str {
-    match annotation_type {
-        DisplayAnnotationType::Error => ERROR_TXT,
-        DisplayAnnotationType::Help => HELP_TXT,
-        DisplayAnnotationType::Info => INFO_TXT,
-        DisplayAnnotationType::Note => NOTE_TXT,
-        DisplayAnnotationType::Warning => WARNING_TXT,
-        DisplayAnnotationType::None => "",
-    }
-}
-
-fn annotation_type_len(annotation_type: &DisplayAnnotationType) -> usize {
-    match annotation_type {
-        DisplayAnnotationType::Error => ERROR_TXT.len(),
-        DisplayAnnotationType::Help => HELP_TXT.len(),
-        DisplayAnnotationType::Info => INFO_TXT.len(),
-        DisplayAnnotationType::Note => NOTE_TXT.len(),
-        DisplayAnnotationType::Warning => WARNING_TXT.len(),
-        DisplayAnnotationType::None => 0,
-    }
-}
-
-fn get_annotation_style<'a>(
-    annotation_type: &DisplayAnnotationType,
-    stylesheet: &'a Stylesheet,
-) -> &'a Style {
-    match annotation_type {
-        DisplayAnnotationType::Error => stylesheet.error(),
-        DisplayAnnotationType::Warning => stylesheet.warning(),
-        DisplayAnnotationType::Info => stylesheet.info(),
-        DisplayAnnotationType::Note => stylesheet.note(),
-        DisplayAnnotationType::Help => stylesheet.help(),
-        DisplayAnnotationType::None => stylesheet.none(),
-    }
-}
-
-#[inline]
-fn is_annotation_empty(annotation: &Annotation<'_>) -> bool {
-    annotation
-        .label
-        .iter()
-        .all(|fragment| fragment.content.is_empty())
+fn is_label_empty(label: &[DisplayTextFragment<'_>]) -> bool {
+    label.iter().all(|fragment| fragment.content.is_empty())
 }
 
 // We replace some characters so the CLI output is always consistent and underlines aligned.
@@ -1706,6 +1582,7 @@ fn overlaps(
 }
 
 fn format_inline_marks(
+    primary_level: Level,
     line: usize,
     inline_marks: &[DisplayMark],
     lineno_width: usize,
@@ -1713,10 +1590,10 @@ fn format_inline_marks(
     buf: &mut StyledBuffer,
 ) -> fmt::Result {
     for mark in inline_marks.iter() {
-        let annotation_style = get_annotation_style(&mark.annotation_type, stylesheet);
+        let style = mark.kind.style(primary_level, stylesheet);
         match mark.mark_type {
             DisplayMarkType::AnnotationThrough(depth) => {
-                buf.putc(line, 3 + lineno_width + depth, '|', *annotation_style);
+                buf.putc(line, 3 + lineno_width + depth, '|', style);
             }
         };
     }

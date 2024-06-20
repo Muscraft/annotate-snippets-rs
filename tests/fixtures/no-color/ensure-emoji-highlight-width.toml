@@ -11,5 +11,5 @@ line_start = 7
 origin = "<file>"
 [[message.snippets.annotations]]
 label = ""
-level = "Error"
+kind = "Message"
 range = [0, 35]

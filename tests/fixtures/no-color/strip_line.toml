@@ -10,7 +10,7 @@ origin = "$DIR/whitespace-trimming.rs"
 
 [[message.snippets.annotations]]
 label = "expected (), found integer"
-level = "Error"
+kind = "Message"
 range = [192, 194]
 
 [renderer]

@@ -14,5 +14,5 @@ origin = "src/display_list.rs"
 fold = false
 [[message.snippets.annotations]]
 label = "missing fields `lineno`, `content`"
-level = "Error"
+kind = "Message"
 range = [31, 128]

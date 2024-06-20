@@ -10,6 +10,9 @@
 //!     .snippet(Snippet::source("Faa").line_start(129).origin("src/display.rs"));
 //! ```
 
+use crate::renderer::stylesheet::Stylesheet;
+use crate::renderer::{ERROR_TXT, HELP_TXT, INFO_TXT, NOTE_TXT, WARNING_TXT};
+use anstyle::Style;
 use std::ops::Range;
 
 /// Primary structure provided for formatting
@@ -113,7 +116,7 @@ pub struct Annotation<'a> {
     /// The byte range of the annotation in the `source` string
     pub(crate) range: Range<usize>,
     pub(crate) label: Option<&'a str>,
-    pub(crate) level: Level,
+    pub(crate) kind: AnnotationKind,
 }
 
 impl<'a> Annotation<'a> {
@@ -151,7 +154,76 @@ impl Level {
         Annotation {
             range: span,
             label: None,
-            level: self,
+            kind: AnnotationKind::Level(self),
+        }
+    }
+}
+
+impl Level {
+    pub(crate) fn style(&self, stylesheet: &Stylesheet) -> Style {
+        match self {
+            Level::Error => stylesheet.error,
+            Level::Warning => stylesheet.warning,
+            Level::Info => stylesheet.info,
+            Level::Note => stylesheet.note,
+            Level::Help => stylesheet.help,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum AnnotationKind {
+    Message,      // in rustc terms, "primary"
+    Context,      // in rustc terms, "secondary"
+    Level(Level), // new to rustc but maintains our current API
+}
+
+impl AnnotationKind {
+    /// Create a [`Annotation`] with the given span for a [`Snippet`]
+    pub fn span<'a>(self, span: Range<usize>) -> Annotation<'a> {
+        Annotation {
+            range: span,
+            label: None,
+            kind: self,
+        }
+    }
+}
+
+impl AnnotationKind {
+    pub(crate) fn mark(&self) -> char {
+        match self {
+            AnnotationKind::Message => '^',
+            AnnotationKind::Context => '-',
+            AnnotationKind::Level(level) => match level {
+                Level::Error => '^',
+                Level::Warning => '-',
+                Level::Info => '-',
+                Level::Note => '-',
+                Level::Help => '-',
+            },
+        }
+    }
+
+    pub(crate) fn style(&self, primary_level: Level, stylesheet: &Stylesheet) -> Style {
+        match self {
+            Self::Message => primary_level.style(stylesheet),
+            Self::Context => stylesheet.context,
+            Self::Level(level) => level.style(stylesheet),
+        }
+    }
+
+    #[inline]
+    pub(crate) fn as_str(&self) -> &'static str {
+        match self {
+            AnnotationKind::Message => "",
+            AnnotationKind::Context => "",
+            AnnotationKind::Level(level) => match level {
+                Level::Error => ERROR_TXT,
+                Level::Warning => WARNING_TXT,
+                Level::Info => INFO_TXT,
+                Level::Note => NOTE_TXT,
+                Level::Help => HELP_TXT,
+            },
         }
     }
 }

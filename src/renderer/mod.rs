@@ -23,6 +23,12 @@ use std::fmt::Display;
 use stylesheet::Stylesheet;
 
 pub const DEFAULT_TERM_WIDTH: usize = 140;
+pub(crate) const ANONYMIZED_LINE_NUM: &str = "LL";
+pub(crate) const ERROR_TXT: &str = "error";
+pub(crate) const HELP_TXT: &str = "help";
+pub(crate) const INFO_TXT: &str = "info";
+pub(crate) const NOTE_TXT: &str = "note";
+pub(crate) const WARNING_TXT: &str = "warning";
 
 /// A renderer for [`Message`]s
 #[derive(Clone, Debug)]
@@ -73,6 +79,7 @@ impl Renderer {
                 }
                 .effects(Effects::BOLD),
                 none: Style::new(),
+                context: BRIGHT_BLUE.effects(Effects::BOLD),
             },
             ..Self::plain()
         }
@@ -148,6 +155,11 @@ impl Renderer {
     /// Set the output style for none
     pub const fn none(mut self, style: Style) -> Self {
         self.stylesheet.none = style;
+        self
+    }
+
+    pub const fn context(mut self, style: Style) -> Self {
+        self.stylesheet.context = style;
         self
     }
 

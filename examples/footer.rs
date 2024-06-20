@@ -1,4 +1,4 @@
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
 fn main() {
     let message =
@@ -9,7 +9,7 @@ fn main() {
                 Snippet::source("        slices: vec![\"A\",")
                     .line_start(13)
                     .origin("src/multislice.rs")
-                    .annotation(Level::Error.span(21..24).label(
+                    .annotation(AnnotationKind::Message.span(21..24).label(
                         "expected struct `annotate_snippets::snippet::Slice`, found reference",
                     )),
             )

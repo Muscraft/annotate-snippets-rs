@@ -22,5 +22,5 @@ origin = "Cargo.toml"
 fold = true
 [[message.snippets.annotations]]
 label = ""
-level = "Error"
+kind = "Message"
 range = [132, 134]

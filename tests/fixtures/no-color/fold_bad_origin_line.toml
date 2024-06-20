@@ -13,5 +13,5 @@ origin = "path/to/error.rs"
 fold = true
 [[message.snippets.annotations]]
 label = "error here"
-level = "Warning"
+kind = "Context"
 range = [2,16]

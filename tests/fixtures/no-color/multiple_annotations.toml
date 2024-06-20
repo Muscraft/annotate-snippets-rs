@@ -17,13 +17,13 @@ fn add_title_line(result: &mut Vec<String>, main_annotation: Option<&Annotation>
 line_start = 96
 [[message.snippets.annotations]]
 label = "Variable defined here"
-level = "Error"
+kind = "Message"
 range = [100, 110]
 [[message.snippets.annotations]]
 label = "Referenced here"
-level = "Error"
+kind = "Message"
 range = [184, 194]
 [[message.snippets.annotations]]
 label = "Referenced again here"
-level = "Error"
+kind = "Message"
 range = [243, 253]

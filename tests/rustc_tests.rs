@@ -2,7 +2,7 @@
 //!
 //! [parser-tests]: https://github.com/rust-lang/rust/blob/894f7a4ba6554d3797404bbf550d9919df060b97/compiler/rustc_parse/src/parser/tests.rs
 
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
 use snapbox::{assert_data_eq, str};
 
@@ -17,7 +17,7 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(10..13).label("test")),
+            .annotation(AnnotationKind::Message.span(10..13).label("test")),
     );
 
     let expected = str![[r#"
@@ -46,7 +46,7 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(10..17).label("test")),
+            .annotation(AnnotationKind::Message.span(10..17).label("test")),
     );
 
     let expected = str![[r#"
@@ -78,14 +78,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..32).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(14..32)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(17..35)
                     .label("`Y` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -116,14 +121,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(14..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(17..24)
                     .label("`Y` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -155,14 +165,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(17..38).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(17..38)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(31..49)
                     .label("`Y` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:6
@@ -194,15 +209,20 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..38).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(14..38)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(17..41)
                     .label("`Y` is a good letter too"),
             )
-            .annotation(Level::Warning.span(20..44).label("`Z` label")),
+            .annotation(AnnotationKind::Context.span(20..44).label("`Z` label")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -236,17 +256,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..38).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(14..38)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(14..38)
                     .label("`Y` is a good letter too"),
             )
-            .annotation(Level::Warning.span(14..38).label("`Z` label")),
+            .annotation(AnnotationKind::Context.span(14..38).label("`Z` label")),
     );
 
-    // This should have a `^` but we currently don't support the idea of a
-    // "primary" annotation, which would solve this
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -254,7 +276,7 @@ error: foo
 3 | /   X0 Y0 Z0
 4 | |   X1 Y1 Z1
 5 | |   X2 Y2 Z2
-  | |    -
+  | |    ^
   | |____|
   |      `X` is a good letter
   |      `Y` is a good letter too
@@ -279,15 +301,20 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(17..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(28..44)
                     .label("`Y` is a good letter too"),
             )
-            .annotation(Level::Warning.span(36..52).label("`Z`")),
+            .annotation(AnnotationKind::Context.span(36..52).label("`Z`")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:6
@@ -324,14 +351,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(14..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(39..55)
                     .label("`Y` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -363,14 +395,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(17..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(31..55)
                     .label("`Y` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:6
@@ -401,11 +438,16 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(18..25).label(""))
-            .annotation(Level::Warning.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(22..23).label("")),
+            .annotation(AnnotationKind::Message.span(18..25).label(""))
+            .annotation(
+                AnnotationKind::Context
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(22..23).label("")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:7
@@ -429,10 +471,15 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..25).label("")),
+            .annotation(
+                AnnotationKind::Message
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(18..25).label("")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -456,11 +503,16 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(18..25).label("`b` is a good letter"))
-            .annotation(Level::Warning.span(14..27).label(""))
-            .annotation(Level::Warning.span(22..23).label("")),
+            .annotation(
+                AnnotationKind::Message
+                    .span(18..25)
+                    .label("`b` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(14..27).label(""))
+            .annotation(AnnotationKind::Context.span(22..23).label("")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:7
@@ -486,10 +538,15 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label(""))
-            .annotation(Level::Warning.span(18..25).label("`b` is a good letter")),
+            .annotation(AnnotationKind::Message.span(14..27).label(""))
+            .annotation(
+                AnnotationKind::Context
+                    .span(18..25)
+                    .label("`b` is a good letter"),
+            ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -515,10 +572,15 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..18).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..22).label("")),
+            .annotation(
+                AnnotationKind::Message
+                    .span(14..18)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(18..22).label("")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -544,10 +606,11 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label(""))
-            .annotation(Level::Warning.span(18..25).label("")),
+            .annotation(AnnotationKind::Message.span(14..27).label(""))
+            .annotation(AnnotationKind::Context.span(18..25).label("")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -571,11 +634,12 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(18..25).label(""))
-            .annotation(Level::Warning.span(14..27).label(""))
-            .annotation(Level::Warning.span(22..23).label("")),
+            .annotation(AnnotationKind::Message.span(18..25).label(""))
+            .annotation(AnnotationKind::Context.span(14..27).label(""))
+            .annotation(AnnotationKind::Context.span(22..23).label("")),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:7
@@ -599,10 +663,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..25).label("`b` is a good letter")),
+            .annotation(
+                AnnotationKind::Message
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(18..25)
+                    .label("`b` is a good letter"),
+            ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
  --> test.rs:3:3
@@ -629,7 +702,11 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter")),
+            .annotation(
+                AnnotationKind::Message
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            ),
     );
 
     let expected = str![[r#"
@@ -655,7 +732,7 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(14..27).label("")),
+            .annotation(AnnotationKind::Message.span(14..27).label("")),
     );
 
     let expected = str![[r#"
@@ -694,14 +771,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(17..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(31..76)
                     .label("`Y` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
   --> test.rs:3:6
@@ -747,14 +829,19 @@ fn foo() {
             .line_start(1)
             .origin("test.rs")
             .fold(true)
-            .annotation(Level::Error.span(17..73).label("`Y` is a good letter"))
             .annotation(
-                Level::Warning
+                AnnotationKind::Message
+                    .span(17..73)
+                    .label("`Y` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
                     .span(37..56)
                     .label("`Z` is a good letter too"),
             ),
     );
 
+    // This is all `^` until we support primary and secondary labels
     let expected = str![[r#"
 error: foo
   --> test.rs:3:6
