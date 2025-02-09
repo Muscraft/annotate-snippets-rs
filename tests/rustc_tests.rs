@@ -2,7 +2,7 @@
 //!
 //! [parser-tests]: https://github.com/rust-lang/rust/blob/894f7a4ba6554d3797404bbf550d9919df060b97/compiler/rustc_parse/src/parser/tests.rs
 
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Group, Level, Renderer, Snippet};
 
 use snapbox::{assert_data_eq, str};
 
@@ -12,12 +12,14 @@ fn ends_on_col0() {
 fn foo() {
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(10..13).label("test")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(10..13).label("test")),
+        ),
     );
 
     let expected = str![[r#"
@@ -40,12 +42,14 @@ fn foo() {
 
   }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(10..17).label("test")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(10..17).label("test")),
+        ),
     );
 
     let expected = str![[r#"
@@ -70,17 +74,23 @@ fn foo() {
   X2 Y2
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..32).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(17..35)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..32)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(17..35)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -107,17 +117,23 @@ fn foo() {
   Y1 X1
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(17..24)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(17..24)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -145,17 +161,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..38).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(31..49)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..38)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..49)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -183,18 +205,24 @@ fn foo() {
   X2 Y2 Z2
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..38).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(17..41)
-                    .label("`Y` is a good letter too"),
-            )
-            .annotation(Level::Warning.span(20..44).label("`Z` label")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..38)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(17..41)
+                        .label("`Y` is a good letter too"),
+                )
+                .annotation(AnnotationKind::Context.span(20..44).label("`Z` label")),
+        ),
     );
 
     let expected = str![[r#"
@@ -224,18 +252,24 @@ fn foo() {
   X2 Y2 Z2
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..38).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(14..38)
-                    .label("`Y` is a good letter too"),
-            )
-            .annotation(Level::Warning.span(14..38).label("`Z` label")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..38)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(14..38)
+                        .label("`Y` is a good letter too"),
+                )
+                .annotation(AnnotationKind::Context.span(14..38).label("`Z` label")),
+        ),
     );
 
     // This should have a `^` but we currently don't support the idea of a
@@ -247,7 +281,7 @@ error: foo
 3 | /   X0 Y0 Z0
 4 | |   X1 Y1 Z1
 5 | |   X2 Y2 Z2
-  | |    -
+  | |    ^
   | |    |
   | |    `X` is a good letter
   | |____`Y` is a good letter too
@@ -266,18 +300,24 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(28..44)
-                    .label("`Y` is a good letter too"),
-            )
-            .annotation(Level::Warning.span(36..52).label("`Z`")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(28..44)
+                        .label("`Y` is a good letter too"),
+                )
+                .annotation(AnnotationKind::Context.span(36..52).label("`Z`")),
+        ),
     );
 
     let expected = str![[r#"
@@ -310,17 +350,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(39..55)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(39..55)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -348,17 +394,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(31..55)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..55)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -385,19 +437,25 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(18..25).label(""))
-            .annotation(Level::Warning.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(22..23).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(18..25).label(""))
+                .annotation(
+                    AnnotationKind::Context
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(22..23).label("")),
+        ),
     );
 
     let expected = str![[r#"
 error: foo
- --> test.rs:3:3
+ --> test.rs:3:7
   |
 3 |   a { b { c } d }
   |   ----^^^^-^^-- `a` is a good letter
@@ -412,13 +470,19 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..25).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(18..25).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -438,19 +502,25 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(18..25).label("`b` is a good letter"))
-            .annotation(Level::Warning.span(14..27).label(""))
-            .annotation(Level::Warning.span(22..23).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(18..25)
+                        .label("`b` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(14..27).label(""))
+                .annotation(AnnotationKind::Context.span(22..23).label("")),
+        ),
     );
 
     let expected = str![[r#"
 error: foo
- --> test.rs:3:3
+ --> test.rs:3:7
   |
 3 |   a { b { c } d }
   |   ----^^^^-^^--
@@ -467,13 +537,19 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label(""))
-            .annotation(Level::Warning.span(18..25).label("`b` is a good letter")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(14..27).label(""))
+                .annotation(
+                    AnnotationKind::Context
+                        .span(18..25)
+                        .label("`b` is a good letter"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -495,13 +571,19 @@ fn foo() {
   a  bc  d
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..18).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..22).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..18)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(18..22).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -523,13 +605,15 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label(""))
-            .annotation(Level::Warning.span(18..25).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(14..27).label(""))
+                .annotation(AnnotationKind::Context.span(18..25).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -549,19 +633,21 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(18..25).label(""))
-            .annotation(Level::Warning.span(14..27).label(""))
-            .annotation(Level::Warning.span(22..23).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(18..25).label(""))
+                .annotation(AnnotationKind::Context.span(14..27).label(""))
+                .annotation(AnnotationKind::Context.span(22..23).label("")),
+        ),
     );
 
     let expected = str![[r#"
 error: foo
- --> test.rs:3:3
+ --> test.rs:3:7
   |
 3 |   a { b { c } d }
   |   ----^^^^-^^--
@@ -576,13 +662,23 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..25).label("`b` is a good letter")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(18..25)
+                        .label("`b` is a good letter"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -605,12 +701,18 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -630,12 +732,14 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(14..27).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -668,17 +772,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(31..76)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..76)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -722,17 +832,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..73).label("`Y` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(37..56)
-                    .label("`Z` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..73)
+                        .label("`Y` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(37..56)
+                        .label("`Z` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
