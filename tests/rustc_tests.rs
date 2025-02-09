@@ -30,7 +30,7 @@ error: foo
   | |_^ test
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn ends_on_col2() {
@@ -54,13 +54,12 @@ error: foo
   |
 2 |   fn foo() {
   |  __________^
-3 | |
-4 | |
+... |
 5 | |   }
   | |___^ test
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn non_nested() {
@@ -98,7 +97,7 @@ error: foo
   |       `X` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn nested() {
@@ -134,7 +133,7 @@ error: foo
   |       `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn different_overlap() {
@@ -173,7 +172,7 @@ error: foo
   |  |____- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn triple_overlap() {
@@ -214,7 +213,7 @@ error: foo
   |        `X` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn triple_exact_overlap() {
@@ -249,13 +248,13 @@ error: foo
 4 | |   X1 Y1 Z1
 5 | |   X2 Y2 Z2
   | |    -
-  | |____|
-  |      `X` is a good letter
-  |      `Y` is a good letter too
+  | |    |
+  | |    `X` is a good letter
+  | |____`Y` is a good letter too
   |      `Z` label
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn minimum_depth() {
@@ -299,7 +298,7 @@ error: foo
   |  |_______- `Z`
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn non_overlapping() {
@@ -337,7 +336,7 @@ error: foo
   | |__________- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn overlapping_start_and_end() {
@@ -377,7 +376,7 @@ error: foo
   |  |__________- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_primary_without_message() {
@@ -398,13 +397,13 @@ fn foo() {
 
     let expected = str![[r#"
 error: foo
- --> test.rs:3:7
+ --> test.rs:3:3
   |
 3 |   a { b { c } d }
   |   ----^^^^-^^-- `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_secondary_without_message() {
@@ -430,7 +429,7 @@ error: foo
   |   ^^^^-------^^ `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_primary_without_message_2() {
@@ -451,7 +450,7 @@ fn foo() {
 
     let expected = str![[r#"
 error: foo
- --> test.rs:3:7
+ --> test.rs:3:3
   |
 3 |   a { b { c } d }
   |   ----^^^^-^^--
@@ -459,7 +458,7 @@ error: foo
   |       `b` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_secondary_without_message_2() {
@@ -487,7 +486,7 @@ error: foo
   |       `b` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_secondary_without_message_3() {
@@ -515,7 +514,7 @@ error: foo
   |   `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_without_message() {
@@ -541,7 +540,7 @@ error: foo
   |   ^^^^-------^^
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_without_message_2() {
@@ -562,13 +561,13 @@ fn foo() {
 
     let expected = str![[r#"
 error: foo
- --> test.rs:3:7
+ --> test.rs:3:3
   |
 3 |   a { b { c } d }
   |   ----^^^^-^^--
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_with_message() {
@@ -597,7 +596,7 @@ error: foo
   |   `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn ingle_label_with_message() {
@@ -622,7 +621,7 @@ error: foo
   |   ^^^^^^^^^^^^^ `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn single_label_without_message() {
@@ -647,7 +646,7 @@ error: foo
   |   ^^^^^^^^^^^^^
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn long_snippet() {
@@ -686,20 +685,22 @@ fn foo() {
 error: foo
   --> test.rs:3:6
    |
- 3 |      X0 Y0 Z0
+3  |      X0 Y0 Z0
    |  _______^
- 4 | |    X1 Y1 Z1
+4  | |    X1 Y1 Z1
    | | ____^____-
    | ||____|
    |  |    `X` is a good letter
- 5 |  | 1
+5  |  | 1
+6  |  | 2
+7  |  | 3
 ...   |
 15 |  |   X2 Y2 Z2
 16 |  |   X3 Y3 Z3
    |  |__________- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn long_snippet_multiple_spans() {
@@ -738,24 +739,23 @@ fn foo() {
 error: foo
   --> test.rs:3:6
    |
- 3 |      X0 Y0 Z0
+3  |      X0 Y0 Z0
    |  _______^
- 4 | |  1
- 5 | |  2
- 6 | |  3
- 7 | |    X1 Y1 Z1
+4  | |  1
+5  | |  2
+6  | |  3
+7  | |    X1 Y1 Z1
    | | _________-
- 8 | || 4
- 9 | || 5
+8  | || 4
+9  | || 5
 10 | || 6
 11 | ||   X2 Y2 Z2
    | ||__________- `Z` is a good letter too
-12 | |  7
 ...  |
 15 | |  10
 16 | |    X3 Y3 Z3
    | |________^ `Y` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
