@@ -1,4 +1,4 @@
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Level, Renderer, Snippet};
 
 fn main() {
     let source = r#") -> Option<String> {
@@ -23,21 +23,24 @@ fn main() {
             _ => continue,
         }
     }"#;
-    let message = Level::Error.title("mismatched types").id("E0308").snippet(
-        Snippet::source(source)
-            .line_start(51)
-            .origin("src/format.rs")
-            .annotation(
-                Level::Warning
-                    .span(5..19)
-                    .label("expected `Option<String>` because of return type"),
-            )
-            .annotation(
-                Level::Error
-                    .span(26..724)
-                    .label("expected enum `std::option::Option`"),
-            ),
-    );
+    let message = Level::Error
+        .message("mismatched types")
+        .id("E0308")
+        .section(
+            Snippet::source(source)
+                .line_start(51)
+                .origin("src/format.rs")
+                .annotation(
+                    AnnotationKind::Context
+                        .span(5..19)
+                        .label("expected `Option<String>` because of return type"),
+                )
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(26..724)
+                        .label("expected enum `std::option::Option`"),
+                ),
+        );
 
     let renderer = Renderer::styled();
     anstream::println!("{}", renderer.render(message));

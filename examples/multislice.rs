@@ -2,13 +2,13 @@ use annotate_snippets::{Level, Renderer, Snippet};
 
 fn main() {
     let message = Level::Error
-        .title("mismatched types")
-        .snippet(
+        .message("mismatched types")
+        .section(
             Snippet::source("Foo")
                 .line_start(51)
                 .origin("src/format.rs"),
         )
-        .snippet(
+        .section(
             Snippet::source("Faa")
                 .line_start(129)
                 .origin("src/display.rs"),

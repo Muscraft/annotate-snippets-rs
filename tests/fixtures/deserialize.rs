@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::ops::Range;
 
 use annotate_snippets::renderer::DEFAULT_TERM_WIDTH;
-use annotate_snippets::{Annotation, Level, Message, Renderer, Snippet};
+use annotate_snippets::{Annotation, AnnotationKind, Level, Message, Renderer, Section, Snippet};
 
 #[derive(Deserialize)]
 pub(crate) struct Fixture {
@@ -19,8 +19,7 @@ pub struct MessageDef {
     #[serde(default)]
     pub id: Option<String>,
     #[serde(default)]
-    pub footer: Vec<MessageDef>,
-    pub snippets: Vec<SnippetDef>,
+    pub sections: Vec<SectionDef>,
 }
 
 impl<'a> From<&'a MessageDef> for Message<'a> {
@@ -29,35 +28,60 @@ impl<'a> From<&'a MessageDef> for Message<'a> {
             level,
             title,
             id,
-            footer,
-            snippets,
+            sections,
         } = val;
-        let mut message = level.title(title);
+        let mut message = level.message(title);
         if let Some(id) = id {
             message = message.id(id);
         }
-        message = message.snippets(snippets.iter().map(Snippet::from));
-        message = message.footers(footer.iter().map(Into::into));
+
+        message = message.sections(sections.iter().map(|s| match s {
+            SectionDef::Title(title) => Section::Title(title.level.title(&title.title)),
+            SectionDef::Cause(cause) => Section::Cause(Snippet::from(cause)),
+        }));
         message
     }
 }
 
 #[derive(Deserialize)]
-pub struct SnippetDef {
-    pub source: String,
-    pub line_start: usize,
-    pub origin: Option<String>,
-    pub annotations: Vec<AnnotationDef>,
-    #[serde(default)]
-    pub fold: bool,
+#[serde(tag = "type")]
+pub enum SectionDef {
+    Title(TitleDef),
+    Cause(SnippetAnnotationDef),
 }
 
-impl<'a> From<&'a SnippetDef> for Snippet<'a> {
-    fn from(val: &'a SnippetDef) -> Self {
-        let SnippetDef {
-            source,
-            line_start,
+impl<'a> From<&'a SectionDef> for Section<'a> {
+    fn from(val: &'a SectionDef) -> Self {
+        match val {
+            SectionDef::Title(title) => Section::Title(title.level.title(&title.title)),
+            SectionDef::Cause(cause) => Section::Cause(Snippet::from(cause)),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+pub struct TitleDef {
+    pub title: String,
+    #[serde(with = "LevelDef")]
+    pub level: Level,
+}
+
+#[derive(Deserialize)]
+pub struct SnippetAnnotationDef {
+    pub(crate) origin: Option<String>,
+    pub(crate) line_start: usize,
+    pub(crate) source: String,
+    pub(crate) annotations: Vec<AnnotationDef>,
+    #[serde(default)]
+    pub(crate) fold: bool,
+}
+
+impl<'a> From<&'a SnippetAnnotationDef> for Snippet<'a, Annotation<'a>> {
+    fn from(val: &'a SnippetAnnotationDef) -> Self {
+        let SnippetAnnotationDef {
             origin,
+            line_start,
+            source,
             annotations,
             fold,
         } = val;
@@ -74,19 +98,23 @@ impl<'a> From<&'a SnippetDef> for Snippet<'a> {
 pub struct AnnotationDef {
     pub range: Range<usize>,
     pub label: String,
-    #[serde(with = "LevelDef")]
-    pub level: Level,
+    #[serde(with = "AnnotationKindDef")]
+    pub kind: AnnotationKind,
 }
 
 impl<'a> From<&'a AnnotationDef> for Annotation<'a> {
     fn from(val: &'a AnnotationDef) -> Self {
-        let AnnotationDef {
-            range,
-            label,
-            level,
-        } = val;
-        level.span(range.start..range.end).label(label)
+        let AnnotationDef { range, label, kind } = val;
+        kind.span(range.start..range.end).label(label)
     }
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize)]
+#[serde(remote = "AnnotationKind")]
+enum AnnotationKindDef {
+    Primary,
+    Context,
 }
 
 #[allow(dead_code)]

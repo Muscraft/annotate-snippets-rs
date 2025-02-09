@@ -2,13 +2,34 @@
 //!
 //! # Example
 //! ```
-//! use annotate_snippets::{Renderer, Snippet, Level};
-//! let snippet = Level::Error.title("mismatched types")
-//!     .snippet(Snippet::source("Foo").line_start(51).origin("src/format.rs"))
-//!     .snippet(Snippet::source("Faa").line_start(129).origin("src/display.rs"));
+//! use annotate_snippets::*;
 //!
-//!  let renderer = Renderer::styled();
-//!  println!("{}", renderer.render(snippet));
+//! let source = r#"
+//! use baz::zed::bar;
+//!
+//! mod baz {}
+//! mod zed {
+//!     pub fn bar() { println!("bar3"); }
+//! }
+//! fn main() {
+//!     bar();
+//! }
+//! "#;
+//! Level::Error
+//!     .message("unresolved import `baz::zed`")
+//!     .id("E0432")
+//!     .section(
+//!         Snippet::source(source)
+//!             .origin("temp.rs")
+//!             .line_start(1)
+//!             .fold(true)
+//!             .annotation(
+//!                 AnnotationKind::Primary
+//!                     .span(10..13)
+//!                     .label("could not find `zed` in `baz`"),
+//!             ),
+//!     );
+//! ```
 
 mod margin;
 mod source_map;
@@ -17,10 +38,10 @@ pub(crate) mod stylesheet;
 
 use crate::renderer::source_map::{AnnotatedLineInfo, Loc, SourceMap};
 use crate::renderer::styled_buffer::StyledBuffer;
-use crate::snippet::Message;
-use crate::{Level, Snippet};
+use crate::{Annotation, AnnotationKind, Level, Message, Section, Snippet, Title};
 pub use anstyle::*;
 use indexmap::IndexMap;
+use itertools::Itertools;
 use margin::Margin;
 use rustc_hash::{FxHashMap, FxHasher};
 use std::borrow::Cow;
@@ -82,6 +103,7 @@ impl Renderer {
                 }
                 .effects(Effects::BOLD),
                 none: Style::new(),
+                context: BRIGHT_BLUE.effects(Effects::BOLD),
             },
             ..Self::plain()
         }
@@ -170,10 +192,20 @@ impl Renderer {
             let n = message.max_line_number();
             num_decimal_digits(n)
         };
+        let level = message
+            .sections
+            .first()
+            .and_then(|s| {
+                if let Section::Title(title) = s {
+                    Some(title.level)
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+        self.render_message(&mut buffer, message, max_line_num_len);
 
-        self.render_message(&mut buffer, message, max_line_num_len, false);
-
-        buffer.render(&self.stylesheet).unwrap()
+        buffer.render(level, &self.stylesheet).unwrap()
     }
 
     fn render_message(
@@ -181,37 +213,103 @@ impl Renderer {
         buffer: &mut StyledBuffer,
         message: Message<'_>,
         max_line_num_len: usize,
-        is_secondary: bool,
     ) {
-        self.render_title(buffer, &message, max_line_num_len, is_secondary);
-
-        let primary_origin = message.snippets.first().and_then(|s| s.origin);
-
-        for snippet in message.snippets {
-            let source_map = SourceMap::new(snippet.source, snippet.line_start);
-            self.render_snippet_annotations(
-                buffer,
-                max_line_num_len,
-                &snippet,
-                primary_origin,
-                &source_map,
+        let primary_origin = message
+            .sections
+            .iter()
+            .find_map(|s| {
+                if let Section::Cause(cause) = s {
+                    if cause.markers.iter().any(|m| m.kind.is_primary()) {
+                        Some(cause.origin)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(
+                message
+                    .sections
+                    .iter()
+                    .find_map(|s| {
+                        if let Section::Cause(cause) = s {
+                            Some(cause.origin)
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_default(),
             );
-        }
 
-        for footer in message.footer {
-            self.render_message(buffer, footer, max_line_num_len, true);
+        let mut children_started = false;
+        let mut sections_iter = message.sections.iter().enumerate().peekable();
+        while let Some((i, section)) = sections_iter.next() {
+            match section {
+                Section::Title(title) => {
+                    let peek = sections_iter.peek().map(|(_, s)| s);
+                    if i != 0 && !children_started {
+                        if matches!(peek, None | Some(Section::Title(_))) {
+                            self.draw_col_separator_no_space(
+                                buffer,
+                                buffer.num_lines(),
+                                max_line_num_len + 1,
+                            );
+                            children_started = true;
+                        }
+                    }
+
+                    self.render_title(
+                        buffer,
+                        title,
+                        peek,
+                        max_line_num_len,
+                        i != 0,
+                        message
+                            .id
+                            .as_ref()
+                            .and_then(|id| if i == 0 { Some(id) } else { None }),
+                    );
+                }
+                Section::Cause(cause) => {
+                    let source_map = SourceMap::new(cause.source, cause.line_start);
+                    self.render_snippet_annotations(
+                        buffer,
+                        max_line_num_len,
+                        cause,
+                        primary_origin,
+                        &source_map,
+                    );
+                }
+            }
         }
     }
 
     fn render_title(
         &self,
         buffer: &mut StyledBuffer,
-        message: &Message<'_>,
+        title: &Title<'_>,
+        next_section: Option<&&Section<'_>>,
         max_line_num_len: usize,
         is_secondary: bool,
+        id: Option<&&str>,
     ) {
         let line_offset = buffer.num_lines();
-        if !message.has_primary_spans() && !message.has_span_labels() && is_secondary {
+
+        let (has_primary_spans, has_span_labels) = next_section
+            .map(|s| {
+                if let Section::Cause(cause) = s {
+                    (
+                        cause.markers.iter().any(|m| m.kind.is_primary()),
+                        cause.markers.iter().any(|m| m.label.is_some()),
+                    )
+                } else {
+                    (false, false)
+                }
+            })
+            .unwrap_or((false, false));
+
+        if !has_primary_spans && !has_span_labels && is_secondary {
             // This is a secondary message with no span info
             for _ in 0..max_line_num_len {
                 buffer.prepend(line_offset, " ", ElementStyle::NoStyle);
@@ -225,24 +323,24 @@ impl Renderer {
             // Style::MainHeaderMsg
             buffer.append(
                 line_offset,
-                message.level.as_str(),
+                title.level.as_str(),
                 ElementStyle::MainHeaderMsg,
             );
             buffer.append(line_offset, ": ", ElementStyle::NoStyle);
-            self.msgs_to_buffer(buffer, message.title, max_line_num_len, "note", None);
+            self.msgs_to_buffer(buffer, title.title, max_line_num_len, "note", None);
         } else {
             let mut label_width = 0;
 
             buffer.append(
                 line_offset,
-                message.level.as_str(),
-                ElementStyle::Level(message.level),
+                title.level.as_str(),
+                ElementStyle::Level(title.level),
             );
-            label_width += message.level.as_str().len();
-            if let Some(id) = message.id {
-                buffer.append(line_offset, "[", ElementStyle::Level(message.level));
-                buffer.append(line_offset, id, ElementStyle::Level(message.level));
-                buffer.append(line_offset, "]", ElementStyle::Level(message.level));
+            label_width += title.level.as_str().len();
+            if let Some(id) = id {
+                buffer.append(line_offset, "[", ElementStyle::Level(title.level));
+                buffer.append(line_offset, id, ElementStyle::Level(title.level));
+                buffer.append(line_offset, "]", ElementStyle::Level(title.level));
                 label_width += 2 + id.len();
             }
             let header_style = if is_secondary {
@@ -252,8 +350,8 @@ impl Renderer {
             };
             buffer.append(line_offset, ": ", header_style);
             label_width += 2;
-            if !message.title.is_empty() {
-                for (line, text) in normalize_whitespace(message.title).lines().enumerate() {
+            if !title.title.is_empty() {
+                for (line, text) in normalize_whitespace(title.title).lines().enumerate() {
                     buffer.append(
                         line_offset + line,
                         &format!(
@@ -346,11 +444,11 @@ impl Renderer {
         &self,
         buffer: &mut StyledBuffer,
         max_line_num_len: usize,
-        snippet: &Snippet<'_>,
+        snippet: &Snippet<'_, Annotation<'_>>,
         primary_origin: Option<&str>,
         sm: &SourceMap<'_>,
     ) {
-        let annotated_lines = sm.annotated_lines(snippet.annotations.clone(), snippet.fold);
+        let annotated_lines = sm.annotated_lines(snippet.markers.clone(), snippet.fold);
         // print out the span location and spacer before we print the annotated source
         // to do this, we need to know if this span will be primary
         let is_primary = primary_origin == snippet.origin;
@@ -365,15 +463,21 @@ impl Renderer {
                     self.file_start(),
                     ElementStyle::LineNumber,
                 );
-                let loc = if let Some(first_line) =
-                    annotated_lines.iter().find(|l| !l.annotations.is_empty())
+                let loc = if let Some(primary_line) = annotated_lines
+                    .iter()
+                    .find(|l| l.annotations.iter().any(|a| a.is_primary()))
+                    .or(annotated_lines.iter().find(|l| !l.annotations.is_empty()))
                 {
-                    let col = if let Some(first_annotation) = first_line.annotations.first() {
+                    let col = if let Some(first_annotation) = primary_line
+                        .annotations
+                        .iter()
+                        .find_or_first(|a| a.is_primary())
+                    {
                         format!(":{}", first_annotation.start.char + 1)
                     } else {
                         String::new()
                     };
-                    format!("{}:{}{}", origin, first_line.line_index, col)
+                    format!("{}:{}{}", origin, primary_line.line_index, col)
                 } else {
                     origin.to_owned()
                 };
@@ -409,15 +513,21 @@ impl Renderer {
                     self.secondary_file_start(),
                     ElementStyle::LineNumber,
                 );
-                let loc = if let Some(first_line) =
-                    annotated_lines.iter().find(|l| !l.annotations.is_empty())
+                let loc = if let Some(primary_line) = annotated_lines
+                    .iter()
+                    .find(|l| l.annotations.iter().any(|a| a.is_primary()))
+                    .or(annotated_lines.iter().find(|l| !l.annotations.is_empty()))
                 {
-                    let col = if let Some(first_annotation) = first_line.annotations.first() {
+                    let col = if let Some(first_annotation) = primary_line
+                        .annotations
+                        .iter()
+                        .find_or_first(|a| a.is_primary())
+                    {
                         format!(":{}", first_annotation.start.char + 1)
                     } else {
                         String::new()
                     };
-                    format!("{}:{}{}", origin, first_line.line_index, col)
+                    format!("{}:{}{}", origin, primary_line.line_index, col)
                 } else {
                     origin.to_owned()
                 };
@@ -585,7 +695,11 @@ impl Renderer {
                                         last_buffer_line_num,
                                         width_offset,
                                         pos,
-                                        ElementStyle::Level(ann.level),
+                                        if ann.is_primary() {
+                                            ElementStyle::UnderlinePrimary
+                                        } else {
+                                            ElementStyle::UnderlineSecondary
+                                        },
                                     );
                                 }
                             }
@@ -628,7 +742,11 @@ impl Renderer {
                                         last_buffer_line_num,
                                         width_offset,
                                         pos,
-                                        ElementStyle::Level(ann.level),
+                                        if ann.is_primary() {
+                                            ElementStyle::UnderlinePrimary
+                                        } else {
+                                            ElementStyle::UnderlineSecondary
+                                        },
                                     );
                                 }
                             }
@@ -642,6 +760,7 @@ impl Renderer {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_source_line(
         &self,
         line_info: &AnnotatedLineInfo<'_>,
@@ -717,9 +836,10 @@ impl Renderer {
                     .take(ann.start.display)
                     .all(|c| c.is_whitespace())
                 {
-                    let style = ElementStyle::Level(ann.level);
-                    annotations.push((depth, style));
-                    buffer_ops.push((line_offset, width_offset + depth - 1, '/', style));
+                    let uline = self.underline(ann.is_primary());
+                    let chr = uline.multiline_whole_line;
+                    annotations.push((depth, uline.style));
+                    buffer_ops.push((line_offset, width_offset + depth - 1, chr, uline.style));
                 } else {
                     short_start = false;
                     break;
@@ -960,18 +1080,18 @@ impl Renderer {
         // 4 |   }
         //   |  _
         for &(pos, annotation) in &annotations_position {
-            let style = ElementStyle::Level(annotation.level);
+            let underline = self.underline(annotation.is_primary());
             let pos = pos + 1;
             match annotation.annotation_type {
                 LineAnnotationType::MultilineStart(depth)
                 | LineAnnotationType::MultilineEnd(depth) => {
                     self.draw_range(
                         buffer,
-                        '_', // underline.multiline_horizontal,
+                        underline.multiline_horizontal,
                         line_offset + pos,
                         width_offset + depth,
                         (code_offset + annotation.start.display).saturating_sub(left),
-                        style,
+                        underline.style,
                     );
                 }
                 _ => {}
@@ -990,7 +1110,7 @@ impl Renderer {
         // 4 | | }
         //   | |_
         for &(pos, annotation) in &annotations_position {
-            let style = ElementStyle::Level(annotation.level);
+            let underline = self.underline(annotation.is_primary());
             let pos = pos + 1;
 
             if pos > 1 && (annotation.has_label() || annotation.takes_space()) {
@@ -999,18 +1119,18 @@ impl Renderer {
                         p,
                         (code_offset + annotation.start.display).saturating_sub(left),
                         match annotation.annotation_type {
-                            LineAnnotationType::MultilineLine(_) => '|', // underline.multiline_vertical,
-                            _ => '|', // underline.vertical_text_line,
+                            LineAnnotationType::MultilineLine(_) => underline.multiline_vertical,
+                            _ => underline.vertical_text_line,
                         },
-                        style,
+                        underline.style,
                     );
                 }
                 if let LineAnnotationType::MultilineStart(_) = annotation.annotation_type {
                     buffer.putc(
                         line_offset + pos,
                         (code_offset + annotation.start.display).saturating_sub(left),
-                        '|', // underline.bottom_right,
-                        style,
+                        underline.bottom_right,
+                        underline.style,
                     );
                 }
                 if matches!(
@@ -1021,8 +1141,8 @@ impl Renderer {
                     buffer.putc(
                         line_offset + pos,
                         (code_offset + annotation.start.display).saturating_sub(left),
-                        '|', // underline.multiline_bottom_right_with_text,
-                        style,
+                        underline.multiline_bottom_right_with_text,
+                        underline.style,
                     );
                 }
             }
@@ -1031,15 +1151,15 @@ impl Renderer {
                     buffer.putc(
                         line_offset + pos,
                         width_offset + depth - 1,
-                        ' ', // underline.top_left,
-                        style,
+                        underline.top_left,
+                        underline.style,
                     );
                     for p in line_offset + pos + 1..line_offset + line_len + 2 {
                         buffer.putc(
                             p,
                             width_offset + depth - 1,
-                            '|', // underline.multiline_vertical,
-                            style,
+                            underline.multiline_vertical,
+                            underline.style,
                         );
                     }
                 }
@@ -1048,15 +1168,15 @@ impl Renderer {
                         buffer.putc(
                             p,
                             width_offset + depth - 1,
-                            '|', // underline.multiline_vertical,
-                            style,
+                            underline.multiline_vertical,
+                            underline.style,
                         );
                     }
                     buffer.putc(
                         line_offset + pos,
                         width_offset + depth - 1,
-                        '|', // underline.bottom_left,
-                        style,
+                        underline.bottom_left,
+                        underline.style,
                     );
                 }
                 _ => (),
@@ -1075,7 +1195,11 @@ impl Renderer {
         // 4 |   }
         //   |  _  test
         for &(pos, annotation) in &annotations_position {
-            let style = ElementStyle::Level(annotation.level);
+            let style = if annotation.is_primary() {
+                ElementStyle::LabelPrimary
+            } else {
+                ElementStyle::LabelSecondary
+            };
             let (pos, col) = if pos == 0 {
                 if annotation.end.display == 0 {
                     (pos + 1, (annotation.end.display + 2).saturating_sub(left))
@@ -1115,19 +1239,14 @@ impl Renderer {
         // 4 |   }
         //   |  _^  test
         for &(pos, annotation) in &annotations_position {
-            let style = ElementStyle::Level(annotation.level);
-            let underline = if annotation.level == Level::Error {
-                '^'
-            } else {
-                '-'
-            };
+            let uline = self.underline(annotation.is_primary());
             for p in annotation.start.display..annotation.end.display {
                 // The default span label underline.
                 buffer.putc(
                     line_offset + 1,
                     (code_offset + p).saturating_sub(left),
-                    underline,
-                    style,
+                    uline.underline,
+                    uline.style,
                 );
             }
 
@@ -1141,8 +1260,12 @@ impl Renderer {
                 buffer.putc(
                     line_offset + 1,
                     (code_offset + annotation.start.display).saturating_sub(left),
-                    underline,
-                    style,
+                    match annotation.annotation_type {
+                        LineAnnotationType::MultilineStart(_) => uline.top_right_flat,
+                        LineAnnotationType::MultilineEnd(_) => uline.multiline_end_same_line,
+                        _ => panic!("unexpected annotation type: {annotation:?}"),
+                    },
+                    uline.style,
                 );
             } else if pos != 0
                 && matches!(
@@ -1155,16 +1278,20 @@ impl Renderer {
                 buffer.putc(
                     line_offset + 1,
                     (code_offset + annotation.start.display).saturating_sub(left),
-                    underline,
-                    style,
+                    match annotation.annotation_type {
+                        LineAnnotationType::MultilineStart(_) => uline.multiline_start_down,
+                        LineAnnotationType::MultilineEnd(_) => uline.multiline_end_up,
+                        _ => panic!("unexpected annotation type: {annotation:?}"),
+                    },
+                    uline.style,
                 );
             } else if pos != 0 && annotation.has_label() {
                 // The beginning of a span label with an actual label, we'll point down.
                 buffer.putc(
                     line_offset + 1,
                     (code_offset + annotation.start.display).saturating_sub(left),
-                    underline,
-                    style,
+                    uline.label_start,
+                    uline.style,
                 );
             }
         }
@@ -1172,7 +1299,11 @@ impl Renderer {
             .iter()
             .filter_map(|&(_, annotation)| match annotation.annotation_type {
                 LineAnnotationType::MultilineStart(p) | LineAnnotationType::MultilineEnd(p) => {
-                    let style = ElementStyle::Level(annotation.level);
+                    let style = if annotation.is_primary() {
+                        ElementStyle::LabelPrimary
+                    } else {
+                        ElementStyle::LabelSecondary
+                    };
                     Some((p, style))
                 }
                 _ => None,
@@ -1301,6 +1432,46 @@ impl Renderer {
     fn secondary_file_start(&self) -> &str {
         "::: "
     }
+
+    fn underline(&self, is_primary: bool) -> UnderlineParts {
+        if is_primary {
+            UnderlineParts {
+                style: ElementStyle::UnderlinePrimary,
+                underline: '^',
+                label_start: '^',
+                vertical_text_line: '|',
+                multiline_vertical: '|',
+                multiline_horizontal: '_',
+                multiline_whole_line: '/',
+                multiline_start_down: '^',
+                bottom_right: '|',
+                top_left: ' ',
+                top_right_flat: '^',
+                bottom_left: '|',
+                multiline_end_up: '^',
+                multiline_end_same_line: '^',
+                multiline_bottom_right_with_text: '|',
+            }
+        } else {
+            UnderlineParts {
+                style: ElementStyle::UnderlineSecondary,
+                underline: '-',
+                label_start: '-',
+                vertical_text_line: '|',
+                multiline_vertical: '|',
+                multiline_horizontal: '_',
+                multiline_whole_line: '/',
+                multiline_start_down: '-',
+                bottom_right: '|',
+                top_left: ' ',
+                top_right_flat: '-',
+                bottom_left: '|',
+                multiline_end_up: '-',
+                multiline_end_same_line: '-',
+                multiline_bottom_right_with_text: '|',
+            }
+        }
+    }
 }
 
 // instead of taking the String length or dividing by 10 while > 0, we multiply a limit by 10 until
@@ -1409,7 +1580,7 @@ pub(crate) struct LineAnnotation<'a> {
     pub end: Loc,
 
     /// level
-    pub level: Level,
+    pub kind: AnnotationKind,
 
     /// Optional label to display adjacent to the annotation.
     pub label: Option<&'a str>,
@@ -1420,6 +1591,10 @@ pub(crate) struct LineAnnotation<'a> {
 }
 
 impl LineAnnotation<'_> {
+    pub(crate) fn is_primary(&self) -> bool {
+        self.kind == AnnotationKind::Primary
+    }
+
     /// Whether this annotation is a vertical line placeholder.
     pub(crate) fn is_line(&self) -> bool {
         matches!(self.annotation_type, LineAnnotationType::MultilineLine(_))
@@ -1543,19 +1718,44 @@ pub(crate) enum ElementStyle {
     LineAndColumn,
     LineNumber,
     Quotation,
+    UnderlinePrimary,
+    UnderlineSecondary,
+    LabelPrimary,
+    LabelSecondary,
     NoStyle,
     Level(Level),
 }
 
 impl ElementStyle {
-    fn color_spec(&self, stylesheet: &Stylesheet) -> Style {
+    fn color_spec(&self, level: Level, stylesheet: &Stylesheet) -> Style {
         match self {
             ElementStyle::LineAndColumn => stylesheet.none,
             ElementStyle::LineNumber => stylesheet.line_no,
             ElementStyle::Quotation => stylesheet.none,
             ElementStyle::MainHeaderMsg => stylesheet.emphasis,
+            ElementStyle::UnderlinePrimary | ElementStyle::LabelPrimary => level.style(stylesheet),
+            ElementStyle::UnderlineSecondary | ElementStyle::LabelSecondary => stylesheet.context,
             ElementStyle::HeaderMsg | ElementStyle::NoStyle => stylesheet.none,
             ElementStyle::Level(lvl) => lvl.style(stylesheet),
         }
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct UnderlineParts {
+    style: ElementStyle,
+    underline: char,
+    label_start: char,
+    vertical_text_line: char,
+    multiline_vertical: char,
+    multiline_horizontal: char,
+    multiline_whole_line: char,
+    multiline_start_down: char,
+    bottom_right: char,
+    top_left: char,
+    top_right_flat: char,
+    bottom_left: char,
+    multiline_end_up: char,
+    multiline_end_same_line: char,
+    multiline_bottom_right_with_text: char,
 }
