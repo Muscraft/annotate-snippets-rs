@@ -1,5 +1,6 @@
 //! Structures used as an input for the library.
 
+use crate::renderer::source_map::SourceMap;
 use crate::renderer::stylesheet::Stylesheet;
 use anstyle::Style;
 use std::ops::Range;
@@ -48,8 +49,9 @@ impl<'a> Message<'a> {
     pub(crate) fn max_line_number(&self) -> usize {
         self.sections
             .iter()
-            .map(|s| {
-                if let Section::Cause(cause) = s {
+            .map(|s| match s {
+                Section::Title(_) => 0,
+                Section::Cause(cause) => {
                     let start = cause
                         .markers
                         .iter()
@@ -66,8 +68,24 @@ impl<'a> Message<'a> {
                         .min(cause.source.len());
 
                     cause.line_start + newline_count(&cause.source[start..end])
-                } else {
-                    0
+                }
+                Section::Suggestion(suggestion) => {
+                    let start = suggestion
+                        .markers
+                        .iter()
+                        .map(|a| a.range.start)
+                        .min()
+                        .unwrap_or(0);
+
+                    let end = suggestion
+                        .markers
+                        .iter()
+                        .map(|a| a.range.end)
+                        .max()
+                        .unwrap_or(suggestion.source.len())
+                        .min(suggestion.source.len());
+
+                    suggestion.line_start + newline_count(&suggestion.source[start..end])
                 }
             })
             .max()
@@ -79,8 +97,8 @@ impl<'a> Message<'a> {
 #[non_exhaustive]
 pub enum Section<'a> {
     Title(Title<'a>),
-    Cause(Snippet<'a, Annotation<'a>>), // or Context?
-                                        // Empty,  // for forcing blank lines
+    Cause(Snippet<'a, Annotation<'a>>),
+    Suggestion(Snippet<'a, Patch<'a>>),
 }
 
 #[derive(Debug)]
@@ -191,6 +209,18 @@ impl<'a> From<Snippet<'a, Annotation<'a>>> for Section<'a> {
     }
 }
 
+impl<'a> Snippet<'a, Patch<'a>> {
+    pub fn patch(mut self, patch: Patch<'a>) -> Snippet<'a, Patch<'a>> {
+        self.markers.push(patch);
+        self
+    }
+
+    pub fn patches(mut self, patches: impl IntoIterator<Item = Patch<'a>>) -> Self {
+        self.markers.extend(patches);
+        self
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Annotation<'a> {
     pub(crate) range: Range<usize>,
@@ -223,5 +253,90 @@ impl AnnotationKind {
 
     pub(crate) fn is_primary(&self) -> bool {
         matches!(self, AnnotationKind::Primary)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Patch<'a> {
+    pub(crate) range: Range<usize>,
+    pub(crate) replacement: &'a str,
+}
+
+impl<'a> Patch<'a> {
+    pub fn new(range: Range<usize>, replacement: &'a str) -> Self {
+        Self { range, replacement }
+    }
+
+    pub(crate) fn is_addition(&self, sm: &SourceMap<'_>) -> bool {
+        !self.replacement.is_empty() && !self.replaces_meaningful_content(sm)
+    }
+
+    pub(crate) fn is_deletion(&self, sm: &SourceMap<'_>) -> bool {
+        self.replacement.trim().is_empty() && self.replaces_meaningful_content(sm)
+    }
+
+    pub(crate) fn is_replacement(&self, sm: &SourceMap<'_>) -> bool {
+        !self.replacement.is_empty() && self.replaces_meaningful_content(sm)
+    }
+
+    /// Whether this is a replacement that overwrites source with a snippet
+    /// in a way that isn't a superset of the original string. For example,
+    /// replacing "abc" with "abcde" is not destructive, but replacing it
+    /// it with "abx" is, since the "c" character is lost.
+    pub(crate) fn is_destructive_replacement(&self, sm: &SourceMap<'_>) -> bool {
+        self.is_replacement(sm)
+            && !sm
+                .span_to_snippet(self.range.clone())
+                // This should use `is_some_and` when our MSRV is >= 1.70
+                .map(|s| as_substr(s.trim(), self.replacement.trim()).is_some())
+                .unwrap_or(false)
+    }
+
+    fn replaces_meaningful_content(&self, sm: &SourceMap<'_>) -> bool {
+        sm.span_to_snippet(self.range.clone())
+            .map_or(!self.range.is_empty(), |snippet| !snippet.trim().is_empty())
+    }
+
+    /// Try to turn a replacement into an addition when the span that is being
+    /// overwritten matches either the prefix or suffix of the replacement.
+    pub(crate) fn trim_trivial_replacements(&mut self, sm: &'a SourceMap<'a>) {
+        if self.replacement.is_empty() {
+            return;
+        }
+        let Some(snippet) = sm.span_to_snippet(self.range.clone()) else {
+            return;
+        };
+
+        if let Some((prefix, substr, suffix)) = as_substr(snippet, self.replacement) {
+            self.range = self.range.start + prefix..self.range.end.saturating_sub(suffix);
+            self.replacement = substr;
+        }
+    }
+}
+
+/// Given an original string like `AACC`, and a suggestion like `AABBCC`, try to detect
+/// the case where a substring of the suggestion is "sandwiched" in the original, like
+/// `BB` is. Return the length of the prefix, the "trimmed" suggestion, and the length
+/// of the suffix.
+fn as_substr<'a>(original: &'a str, suggestion: &'a str) -> Option<(usize, &'a str, usize)> {
+    let common_prefix = original
+        .chars()
+        .zip(suggestion.chars())
+        .take_while(|(c1, c2)| c1 == c2)
+        .map(|(c, _)| c.len_utf8())
+        .sum();
+    let original = &original[common_prefix..];
+    let suggestion = &suggestion[common_prefix..];
+    if let Some(stripped) = suggestion.strip_suffix(original) {
+        let common_suffix = original.len();
+        Some((common_prefix, stripped, common_suffix))
+    } else {
+        None
+    }
+}
+
+impl<'a> From<Snippet<'a, Patch<'a>>> for Section<'a> {
+    fn from(value: Snippet<'a, Patch<'a>>) -> Self {
+        Section::Suggestion(value)
     }
 }

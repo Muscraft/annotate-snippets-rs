@@ -2,7 +2,9 @@ use serde::Deserialize;
 use std::ops::Range;
 
 use annotate_snippets::renderer::DEFAULT_TERM_WIDTH;
-use annotate_snippets::{Annotation, AnnotationKind, Level, Message, Renderer, Section, Snippet};
+use annotate_snippets::{
+    Annotation, AnnotationKind, Level, Message, Patch, Renderer, Section, Snippet,
+};
 
 #[derive(Deserialize)]
 pub(crate) struct Fixture {
@@ -38,6 +40,7 @@ impl<'a> From<&'a MessageDef> for Message<'a> {
         message = message.sections(sections.iter().map(|s| match s {
             SectionDef::Title(title) => Section::Title(title.level.title(&title.title)),
             SectionDef::Cause(cause) => Section::Cause(Snippet::from(cause)),
+            SectionDef::Suggestion(suggestion) => Section::Suggestion(Snippet::from(suggestion)),
         }));
         message
     }
@@ -48,6 +51,7 @@ impl<'a> From<&'a MessageDef> for Message<'a> {
 pub enum SectionDef {
     Title(TitleDef),
     Cause(SnippetAnnotationDef),
+    Suggestion(SnippetPatchDef),
 }
 
 impl<'a> From<&'a SectionDef> for Section<'a> {
@@ -55,6 +59,7 @@ impl<'a> From<&'a SectionDef> for Section<'a> {
         match val {
             SectionDef::Title(title) => Section::Title(title.level.title(&title.title)),
             SectionDef::Cause(cause) => Section::Cause(Snippet::from(cause)),
+            SectionDef::Suggestion(suggestion) => Section::Suggestion(Snippet::from(suggestion)),
         }
     }
 }
@@ -115,6 +120,47 @@ impl<'a> From<&'a AnnotationDef> for Annotation<'a> {
 enum AnnotationKindDef {
     Primary,
     Context,
+}
+
+#[derive(Deserialize)]
+pub struct SnippetPatchDef {
+    pub(crate) origin: Option<String>,
+    pub(crate) line_start: usize,
+    pub(crate) source: String,
+    pub(crate) patches: Vec<PatchDef>,
+    #[serde(default)]
+    pub(crate) fold: bool,
+}
+
+impl<'a> From<&'a SnippetPatchDef> for Snippet<'a, Patch<'a>> {
+    fn from(val: &'a SnippetPatchDef) -> Self {
+        let SnippetPatchDef {
+            origin,
+            line_start,
+            source,
+            patches,
+            fold,
+        } = val;
+        let mut snippet = Snippet::source(source).line_start(*line_start).fold(*fold);
+        if let Some(origin) = origin {
+            snippet = snippet.origin(origin);
+        }
+        snippet = snippet.patches(patches.iter().map(Into::into));
+        snippet
+    }
+}
+
+#[derive(Deserialize)]
+pub struct PatchDef {
+    pub range: Range<usize>,
+    pub replacement: String,
+}
+
+impl<'a> From<&'a PatchDef> for Patch<'a> {
+    fn from(val: &'a PatchDef) -> Self {
+        let PatchDef { range, replacement } = val;
+        Patch::new(range.start..range.end, replacement)
+    }
 }
 
 #[allow(dead_code)]

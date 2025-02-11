@@ -1,15 +1,15 @@
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{Annotation, Level, Renderer, Snippet};
 
 fn main() {
     let message = Level::Error
         .message("mismatched types")
         .section(
-            Snippet::source("Foo")
+            Snippet::<Annotation<'_>>::source("Foo")
                 .line_start(51)
                 .origin("src/format.rs"),
         )
         .section(
-            Snippet::source("Faa")
+            Snippet::<Annotation<'_>>::source("Faa")
                 .line_start(129)
                 .origin("src/display.rs"),
         );
