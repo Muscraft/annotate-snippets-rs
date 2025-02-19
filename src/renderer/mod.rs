@@ -533,6 +533,7 @@ impl Renderer {
                 buffer,
                 width_offset,
                 code_offset,
+                max_line_num_len,
                 margin,
             );
 
@@ -605,6 +606,7 @@ impl Renderer {
                             last_buffer_line_num,
                             width_offset,
                             code_offset,
+                            max_line_num_len,
                             margin,
                         );
 
@@ -646,6 +648,7 @@ impl Renderer {
         buffer: &mut StyledBuffer,
         width_offset: usize,
         code_offset: usize,
+        max_line_num_len: usize,
         margin: Margin,
     ) -> Vec<(usize, ElementStyle)> {
         // Draw:
@@ -684,6 +687,7 @@ impl Renderer {
             line_offset,
             width_offset,
             code_offset,
+            max_line_num_len,
             margin,
         );
 
@@ -1185,6 +1189,7 @@ impl Renderer {
         line_offset: usize,
         width_offset: usize,
         code_offset: usize,
+        max_line_num_len: usize,
         margin: Margin,
     ) {
         // Tabs are assumed to have been replaced by spaces in calling code.
@@ -1228,7 +1233,7 @@ impl Renderer {
         buffer.puts(
             line_offset,
             0,
-            &self.maybe_anonymized(line_index),
+            &format!("{:>max_line_num_len$}", self.maybe_anonymized(line_index)),
             ElementStyle::LineNumber,
         );
 
