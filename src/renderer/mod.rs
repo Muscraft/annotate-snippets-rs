@@ -421,7 +421,11 @@ impl Renderer {
                 } else {
                     origin.to_owned()
                 };
-                buffer.append(buffer_msg_line_offset + 1, &loc, ElementStyle::LineAndColumn);
+                buffer.append(
+                    buffer_msg_line_offset + 1,
+                    &loc,
+                    ElementStyle::LineAndColumn,
+                );
                 for _ in 0..max_line_num_len {
                     buffer.prepend(buffer_msg_line_offset + 1, " ", ElementStyle::NoStyle);
                 }
@@ -529,6 +533,7 @@ impl Renderer {
                 buffer,
                 width_offset,
                 code_offset,
+                max_line_num_len,
                 margin,
             );
 
@@ -601,6 +606,7 @@ impl Renderer {
                             last_buffer_line_num,
                             width_offset,
                             code_offset,
+                            max_line_num_len,
                             margin,
                         );
 
@@ -642,6 +648,7 @@ impl Renderer {
         buffer: &mut StyledBuffer,
         width_offset: usize,
         code_offset: usize,
+        max_line_num_len: usize,
         margin: Margin,
     ) -> Vec<(usize, ElementStyle)> {
         // Draw:
@@ -680,6 +687,7 @@ impl Renderer {
             line_offset,
             width_offset,
             code_offset,
+            max_line_num_len,
             margin,
         );
 
@@ -1181,6 +1189,7 @@ impl Renderer {
         line_offset: usize,
         width_offset: usize,
         code_offset: usize,
+        max_line_num_len: usize,
         margin: Margin,
     ) {
         // Tabs are assumed to have been replaced by spaces in calling code.
@@ -1224,7 +1233,7 @@ impl Renderer {
         buffer.puts(
             line_offset,
             0,
-            &self.maybe_anonymized(line_index),
+            &format!("{:>max_line_num_len$}", self.maybe_anonymized(line_index)),
             ElementStyle::LineNumber,
         );
 
@@ -1257,7 +1266,13 @@ impl Renderer {
     }
 
     fn draw_col_separator_no_space(&self, buffer: &mut StyledBuffer, line: usize, col: usize) {
-        self.draw_col_separator_no_space_with_style(buffer, '|', line, col, ElementStyle::LineNumber);
+        self.draw_col_separator_no_space_with_style(
+            buffer,
+            '|',
+            line,
+            col,
+            ElementStyle::LineNumber,
+        );
     }
 
     fn draw_col_separator_no_space_with_style(
