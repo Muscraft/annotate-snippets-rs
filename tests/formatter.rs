@@ -2627,3 +2627,77 @@ LL +         break;
     let renderer_unicode = renderer_ascii.theme(OutputTheme::Unicode);
     assert_data_eq!(renderer_unicode.render(input), expected_unicode);
 }
+
+#[test]
+fn temp3() {
+    let source = r#"
+cargo
+fuzzy
+pizza
+jumps
+crazy
+quack
+zappy
+"#;
+
+    let input_new = &[Group::new()
+        .element(
+            Level::ERROR
+                .title("the size for values of type `T` cannot be known at compilation time")
+                .id("E0277"),
+        )
+        .element(
+            Snippet::source(source)
+                .line_start(7)
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(1..6))
+                .annotation(AnnotationKind::Visible.span(37..41)),
+        )];
+    let expected = str![[r#"
+error[E0277]: the size for values of type `T` cannot be known at compilation time
+   |
+ 8 | cargo
+   | ^^^^^
+...
+14 | zappy
+"#]];
+    let renderer = Renderer::plain();
+    assert_data_eq!(renderer.render(input_new), expected);
+}
+
+#[test]
+fn temp4() {
+    let source = r#"
+cargo
+fuzzy
+pizza
+jumps
+crazy
+quack
+zappy
+"#;
+
+    let input_new = &[Group::new()
+        .element(
+            Level::ERROR
+                .title("the size for values of type `T` cannot be known at compilation time")
+                .id("E0277"),
+        )
+        .element(
+            Snippet::source(source)
+                .line_start(7)
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(1..6))
+                .annotation(AnnotationKind::Visible.span(16..18)),
+        )];
+    let expected = str![[r#"
+error[E0277]: the size for values of type `T` cannot be known at compilation time
+   |
+ 8 | cargo
+   | ^^^^^
+ 9 | fuzzy
+10 | pizza
+"#]];
+    let renderer = Renderer::plain();
+    assert_data_eq!(renderer.render(input_new), expected);
+}

@@ -2709,6 +2709,7 @@ impl LineAnnotation<'_> {
                     ElementStyle::UnderlineSecondary
                 }
             }
+            (None, AnnotationKind::Visible) => ElementStyle::NoStyle,
         }
     }
 }

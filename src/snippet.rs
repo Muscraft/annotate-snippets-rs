@@ -274,6 +274,7 @@ pub enum AnnotationKind {
     Primary,
     /// "secondary"; fixed color
     Context,
+    Visible,
 }
 
 impl AnnotationKind {
