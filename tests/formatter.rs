@@ -2656,13 +2656,16 @@ zappy
     .element(
         Snippet::source(source)
             .line_start(11)
-            .annotation(AnnotationKind::Primary.span(1..6)),
+            .annotation(AnnotationKind::Primary.span(1..6))
+            .annotation(AnnotationKind::Visible.span(37..41)),
     )];
     let expected = str![[r#"
 error[E0277]: the size for values of type `T` cannot be known at compilation time
    |
 12 | cargo
    | ^^^^^
+...
+18 | zappy
 "#]];
     let renderer = Renderer::plain();
     assert_data_eq!(renderer.render(input_new), expected);
@@ -2688,13 +2691,16 @@ zappy
     .element(
         Snippet::source(source)
             .line_start(11)
-            .annotation(AnnotationKind::Primary.span(1..6)),
+            .annotation(AnnotationKind::Primary.span(1..6))
+            .annotation(AnnotationKind::Visible.span(16..18)),
     )];
     let expected = str![[r#"
 error[E0277]: the size for values of type `T` cannot be known at compilation time
    |
 12 | cargo
    | ^^^^^
+13 | fuzzy
+14 | pizza
 "#]];
     let renderer = Renderer::plain();
     assert_data_eq!(renderer.render(input_new), expected);

@@ -313,6 +313,8 @@ pub enum AnnotationKind {
     ///
     /// [`Renderer::context`]: crate::renderer::Renderer
     Context,
+    /// Allows text to be kept in the source without being highlighted
+    Visible,
 }
 
 impl AnnotationKind {
