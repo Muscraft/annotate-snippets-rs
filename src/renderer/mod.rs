@@ -66,6 +66,7 @@ type FxIndexMap<K, V> = IndexMap<K, V, BuildHasherDefault<FxHasher>>;
 pub struct Renderer {
     anonymized_line_numbers: bool,
     term_width: usize,
+    theme: OutputTheme,
     stylesheet: Stylesheet,
 }
 
@@ -75,6 +76,7 @@ impl Renderer {
         Self {
             anonymized_line_numbers: false,
             term_width: DEFAULT_TERM_WIDTH,
+            theme: OutputTheme::Ascii,
             stylesheet: Stylesheet::plain(),
         }
     }
@@ -140,6 +142,11 @@ impl Renderer {
     // Set the terminal width
     pub const fn term_width(mut self, term_width: usize) -> Self {
         self.term_width = term_width;
+        self
+    }
+
+    pub const fn theme(mut self, output_theme: OutputTheme) -> Self {
+        self.theme = output_theme;
         self
     }
 
@@ -321,6 +328,7 @@ impl Renderer {
                                     None
                                 }
                             }),
+                            matches!(peek, Some(Element::Title(_))),
                         );
                         last_was_suggestion = false;
                     }
@@ -336,6 +344,7 @@ impl Renderer {
                                 &source_map,
                                 annotated_lines,
                                 max_depth,
+                                peek.is_some() || (g == 0 && group_len > 1),
                             );
 
                             if cause.col_separator.unwrap_or(false)
@@ -351,12 +360,10 @@ impl Renderer {
                                 // We want to draw the separator when it is
                                 // requested, or when it is the last element
                                 } else if !(cause.col_separator.is_none() && peek.is_some()) {
-                                    self.draw_col_separator_no_space_with_style(
+                                    self.draw_col_separator_end(
                                         buffer,
-                                        '|',
                                         buffer.num_lines(),
                                         max_line_num_len + 1,
-                                        ElementStyle::LineNumber,
                                     );
                                 }
                             }
@@ -388,12 +395,10 @@ impl Renderer {
                         || matches!(section, Element::Title(level) if level.level == Level::None))
                 {
                     if peek.is_none() && group_len > 1 {
-                        self.draw_col_separator_no_space_with_style(
+                        self.draw_col_separator_end(
                             buffer,
-                            '|',
                             buffer.num_lines(),
                             max_line_num_len + 1,
-                            ElementStyle::LineNumber,
                         );
                     } else if matches!(peek, Some(Element::Title(level)) if level.level != Level::None)
                     {
@@ -408,6 +413,7 @@ impl Renderer {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn render_title(
         &self,
         buffer: &mut StyledBuffer,
@@ -416,13 +422,13 @@ impl Renderer {
         max_line_num_len: usize,
         is_secondary: bool,
         id: Option<&&str>,
+        is_cont: bool,
     ) {
         let mut line_offset = buffer.num_lines();
         if title.needs_col_separator {
             self.draw_col_separator_no_space(buffer, line_offset, max_line_num_len + 1);
             line_offset += 1;
         }
-
         let (has_primary_spans, has_span_labels) = next_section
             .map(|s| match s {
                 Element::Title(_) => (false, false),
@@ -440,13 +446,10 @@ impl Renderer {
             for _ in 0..max_line_num_len {
                 buffer.prepend(line_offset, " ", ElementStyle::NoStyle);
             }
+
+            // Style::MainHeaderMsg
             if title.level != Level::None {
-                buffer.puts(
-                    line_offset,
-                    max_line_num_len + 1,
-                    "= ",
-                    ElementStyle::LineNumber,
-                );
+                self.draw_note_separator(buffer, line_offset, max_line_num_len + 1, is_cont);
                 buffer.append(
                     line_offset,
                     title.level.as_str(),
@@ -454,7 +457,25 @@ impl Renderer {
                 );
                 buffer.append(line_offset, ": ", ElementStyle::NoStyle);
             }
-            self.msgs_to_buffer(buffer, title.title, max_line_num_len, "note", None);
+
+            let printed_lines =
+                self.msgs_to_buffer(buffer, title.title, max_line_num_len, "note", None);
+            if is_cont && matches!(self.theme, OutputTheme::Unicode) {
+                // There's another note after this one, associated to the subwindow above.
+                // We write additional vertical lines to join them:
+                //   ╭▸ test.rs:3:3
+                //   │
+                // 3 │   code
+                //   │   ━━━━
+                //   │
+                //   ├ note: foo
+                //   │       bar
+                //   ╰ note: foo
+                //           bar
+                for i in line_offset + 1..=printed_lines {
+                    self.draw_col_separator_no_space(buffer, i, max_line_num_len + 1);
+                }
+            }
         } else {
             let mut label_width = 0;
 
@@ -631,7 +652,7 @@ impl Renderer {
                 max_line_num_len + 1,
             );
             let title = Level::Note.title(label);
-            self.render_title(buffer, &title, None, max_line_num_len, true, None);
+            self.render_title(buffer, &title, None, max_line_num_len, true, None, false);
         }
     }
 
@@ -645,6 +666,7 @@ impl Renderer {
         sm: &SourceMap<'_>,
         annotated_lines: Vec<AnnotatedLineInfo<'_>>,
         multiline_depth: usize,
+        is_cont: bool,
     ) {
         if let Some(origin) = snippet.origin {
             let mut origin = Origin::new(origin);
@@ -770,6 +792,7 @@ impl Renderer {
                 code_offset,
                 max_line_num_len,
                 margin,
+                !is_cont && annotated_line_idx + 1 == annotated_lines.len(),
             );
 
             let mut to_add = FxHashMap::default();
@@ -796,7 +819,8 @@ impl Renderer {
                 match line_idx_delta.cmp(&2) {
                     Ordering::Greater => {
                         let last_buffer_line_num = buffer.num_lines();
-                        buffer.puts(last_buffer_line_num, 0, "...", ElementStyle::LineNumber);
+
+                        self.draw_line_separator(buffer, last_buffer_line_num, width_offset);
 
                         // Set the multiline annotation vertical lines on `...` bridging line.
                         for (depth, style) in &multilines {
@@ -894,6 +918,7 @@ impl Renderer {
         code_offset: usize,
         max_line_num_len: usize,
         margin: Margin,
+        close_window: bool,
     ) -> Vec<(usize, ElementStyle)> {
         // Draw:
         //
@@ -1191,7 +1216,9 @@ impl Renderer {
         for pos in 0..=line_len {
             self.draw_col_separator_no_space(buffer, line_offset + pos + 1, width_offset - 2);
         }
-
+        if close_window {
+            self.draw_col_separator_end(buffer, line_offset + line_len + 1, width_offset - 2);
+        }
         // Write the horizontal lines for multiline annotations
         // (only the first and last lines need this).
         //
@@ -1456,18 +1483,12 @@ impl Renderer {
             let is_multiline = complete.lines().count() > 1;
 
             if i == 0 {
-                self.draw_col_separator_no_space_with_style(
-                    buffer,
-                    '|',
-                    row_num - 1,
-                    max_line_num_len + 1,
-                    ElementStyle::LineNumber,
-                );
+                self.draw_col_separator_start(buffer, row_num - 1, max_line_num_len + 1);
             } else {
                 buffer.puts(
                     row_num - 1,
                     max_line_num_len + 1,
-                    "|",
+                    self.multi_suggestion_separator(),
                     ElementStyle::LineNumber,
                 );
             }
@@ -1605,7 +1626,7 @@ impl Renderer {
                             );
                         }
 
-                        let placeholder = "...";
+                        let placeholder = self.margin();
                         let padding = str_width(placeholder);
                         buffer.puts(
                             row_num,
@@ -1724,7 +1745,11 @@ impl Renderer {
                             buffer.putc(
                                 row_num,
                                 (padding as isize + p) as usize,
-                                if part.is_addition(sm) { '+' } else { '~' },
+                                if part.is_addition(sm) {
+                                    '+'
+                                } else {
+                                    self.diff()
+                                },
                                 ElementStyle::Addition,
                             );
                         }
@@ -1755,7 +1780,7 @@ impl Renderer {
 
             // if we elided some lines, add an ellipsis
             if lines.next().is_some() {
-                let placeholder = "...";
+                let placeholder = self.margin();
                 let padding = str_width(placeholder);
                 buffer.puts(
                     row_num,
@@ -1770,13 +1795,7 @@ impl Renderer {
                     | DisplaySuggestion::Underline => row_num - 1,
                     DisplaySuggestion::None => row_num,
                 };
-                self.draw_col_separator_no_space_with_style(
-                    buffer,
-                    '|',
-                    row,
-                    max_line_num_len + 1,
-                    ElementStyle::LineNumber,
-                );
+                self.draw_col_separator_end(buffer, row, max_line_num_len + 1);
                 row_num = row + 1;
             }
         }
@@ -1895,7 +1914,13 @@ impl Renderer {
                     self.draw_col_separator_no_space(buffer, *row_num, max_line_num_len + 1);
                 }
                 _ => {
-                    buffer.puts(*row_num, max_line_num_len + 1, "~", ElementStyle::Addition);
+                    let diff = self.diff();
+                    buffer.puts(
+                        *row_num,
+                        max_line_num_len + 1,
+                        &format!("{diff} "),
+                        ElementStyle::Addition,
+                    );
                 }
             }
             //   LL | line_to_add
@@ -1929,12 +1954,7 @@ impl Renderer {
                 &self.maybe_anonymized(line_num),
                 ElementStyle::LineNumber,
             );
-            buffer.puts(
-                *row_num,
-                max_line_num_len + 1,
-                "| ",
-                ElementStyle::LineNumber,
-            );
+            self.draw_col_separator(buffer, *row_num, max_line_num_len + 1);
             buffer.append(
                 *row_num,
                 &normalize_whitespace(line_to_add),
@@ -2004,16 +2024,23 @@ impl Renderer {
 
         // Was originally Style::Quotation
         buffer.puts(line_offset, code_offset, &code, ElementStyle::Quotation);
+        let placeholder = self.margin();
         if margin.was_cut_left() {
             // We have stripped some code/whitespace from the beginning, make it clear.
-            buffer.puts(line_offset, code_offset, "...", ElementStyle::LineNumber);
+            buffer.puts(
+                line_offset,
+                code_offset,
+                placeholder,
+                ElementStyle::LineNumber,
+            );
         }
         if margin.was_cut_right(line_len) {
+            let padding = str_width(placeholder);
             // We have stripped some code after the rightmost span end, make it clear we did so.
             buffer.puts(
                 line_offset,
-                code_offset + taken - 3,
-                "...",
+                code_offset + taken - padding,
+                placeholder,
                 ElementStyle::LineNumber,
             );
         }
@@ -2049,17 +2076,107 @@ impl Renderer {
         depth: usize,
         style: ElementStyle,
     ) {
-        buffer.putc(line, offset + depth - 1, '|', style);
+        let chr = match (style, self.theme) {
+            (ElementStyle::UnderlinePrimary | ElementStyle::LabelPrimary, OutputTheme::Ascii) => {
+                '|'
+            }
+            (_, OutputTheme::Ascii) => '|',
+            (ElementStyle::UnderlinePrimary | ElementStyle::LabelPrimary, OutputTheme::Unicode) => {
+                '┃'
+            }
+            (_, OutputTheme::Unicode) => '│',
+        };
+        buffer.putc(line, offset + depth - 1, chr, style);
+    }
+
+    fn col_separator(&self) -> char {
+        match self.theme {
+            OutputTheme::Ascii => '|',
+            OutputTheme::Unicode => '│',
+        }
+    }
+
+    fn multi_suggestion_separator(&self) -> &'static str {
+        match self.theme {
+            OutputTheme::Ascii => "|",
+            OutputTheme::Unicode => "├╴",
+        }
+    }
+
+    fn draw_col_separator(&self, buffer: &mut StyledBuffer, line: usize, col: usize) {
+        let chr = self.col_separator();
+        buffer.puts(line, col, &format!("{chr} "), ElementStyle::LineNumber);
     }
 
     fn draw_col_separator_no_space(&self, buffer: &mut StyledBuffer, line: usize, col: usize) {
+        let chr = self.col_separator();
         self.draw_col_separator_no_space_with_style(
             buffer,
-            '|',
+            chr,
             line,
             col,
             ElementStyle::LineNumber,
         );
+    }
+
+    fn draw_col_separator_start(&self, buffer: &mut StyledBuffer, line: usize, col: usize) {
+        match self.theme {
+            OutputTheme::Ascii => {
+                self.draw_col_separator_no_space_with_style(
+                    buffer,
+                    '|',
+                    line,
+                    col,
+                    ElementStyle::LineNumber,
+                );
+            }
+            OutputTheme::Unicode => {
+                self.draw_col_separator_no_space_with_style(
+                    buffer,
+                    '╭',
+                    line,
+                    col,
+                    ElementStyle::LineNumber,
+                );
+                self.draw_col_separator_no_space_with_style(
+                    buffer,
+                    '╴',
+                    line,
+                    col + 1,
+                    ElementStyle::LineNumber,
+                );
+            }
+        }
+    }
+
+    fn draw_col_separator_end(&self, buffer: &mut StyledBuffer, line: usize, col: usize) {
+        match self.theme {
+            OutputTheme::Ascii => {
+                self.draw_col_separator_no_space_with_style(
+                    buffer,
+                    '|',
+                    line,
+                    col,
+                    ElementStyle::LineNumber,
+                );
+            }
+            OutputTheme::Unicode => {
+                self.draw_col_separator_no_space_with_style(
+                    buffer,
+                    '╰',
+                    line,
+                    col,
+                    ElementStyle::LineNumber,
+                );
+                self.draw_col_separator_no_space_with_style(
+                    buffer,
+                    '╴',
+                    line,
+                    col + 1,
+                    ElementStyle::LineNumber,
+                );
+            }
+        }
     }
 
     fn draw_col_separator_no_space_with_style(
@@ -2081,17 +2198,84 @@ impl Renderer {
         }
     }
 
-    fn file_start(&self) -> &str {
-        "--> "
+    fn file_start(&self) -> &'static str {
+        match self.theme {
+            OutputTheme::Ascii => "--> ",
+            OutputTheme::Unicode => " ╭▸ ",
+        }
     }
 
-    fn secondary_file_start(&self) -> &str {
-        "::: "
+    fn secondary_file_start(&self) -> &'static str {
+        match self.theme {
+            OutputTheme::Ascii => "::: ",
+            OutputTheme::Unicode => " ⸬ ",
+        }
+    }
+
+    fn draw_note_separator(
+        &self,
+        buffer: &mut StyledBuffer,
+        line: usize,
+        col: usize,
+        is_cont: bool,
+    ) {
+        let chr = match self.theme {
+            OutputTheme::Ascii => "= ",
+            OutputTheme::Unicode if is_cont => "├ ",
+            OutputTheme::Unicode => "╰ ",
+        };
+        buffer.puts(line, col, chr, ElementStyle::LineNumber);
+    }
+
+    fn diff(&self) -> char {
+        match self.theme {
+            OutputTheme::Ascii => '~',
+            OutputTheme::Unicode => '±',
+        }
+    }
+
+    fn draw_line_separator(&self, buffer: &mut StyledBuffer, line: usize, col: usize) {
+        let (column, dots) = match self.theme {
+            OutputTheme::Ascii => (0, "..."),
+            OutputTheme::Unicode => (col - 2, "‡"),
+        };
+        buffer.puts(line, column, dots, ElementStyle::LineNumber);
+    }
+
+    fn margin(&self) -> &'static str {
+        match self.theme {
+            OutputTheme::Ascii => "...",
+            OutputTheme::Unicode => "…",
+        }
     }
 
     fn underline(&self, is_primary: bool) -> UnderlineParts {
-        if is_primary {
-            UnderlineParts {
+        //               X0 Y0
+        // label_start > ┯━━━━ < underline
+        //               │ < vertical_text_line
+        //               text
+
+        //    multiline_start_down ⤷ X0 Y0
+        //            top_left > ┌───╿──┘ < top_right_flat
+        //           top_left > ┏│━━━┙ < top_right
+        // multiline_vertical > ┃│
+        //                      ┃│   X1 Y1
+        //                      ┃│   X2 Y2
+        //                      ┃└────╿──┘ < multiline_end_same_line
+        //        bottom_left > ┗━━━━━┥ < bottom_right_with_text
+        //   multiline_horizontal ^   `X` is a good letter
+
+        // multiline_whole_line > ┏ X0 Y0
+        //                        ┃   X1 Y1
+        //                        ┗━━━━┛ < multiline_end_same_line
+
+        // multiline_whole_line > ┏ X0 Y0
+        //                        ┃ X1 Y1
+        //                        ┃  ╿ < multiline_end_up
+        //                        ┗━━┛ < bottom_right
+
+        match (self.theme, is_primary) {
+            (OutputTheme::Ascii, true) => UnderlineParts {
                 style: ElementStyle::UnderlinePrimary,
                 underline: '^',
                 label_start: '^',
@@ -2107,9 +2291,8 @@ impl Renderer {
                 multiline_end_up: '^',
                 multiline_end_same_line: '^',
                 multiline_bottom_right_with_text: '|',
-            }
-        } else {
-            UnderlineParts {
+            },
+            (OutputTheme::Ascii, false) => UnderlineParts {
                 style: ElementStyle::UnderlineSecondary,
                 underline: '-',
                 label_start: '-',
@@ -2125,7 +2308,41 @@ impl Renderer {
                 multiline_end_up: '-',
                 multiline_end_same_line: '-',
                 multiline_bottom_right_with_text: '|',
-            }
+            },
+            (OutputTheme::Unicode, true) => UnderlineParts {
+                style: ElementStyle::UnderlinePrimary,
+                underline: '━',
+                label_start: '┯',
+                vertical_text_line: '│',
+                multiline_vertical: '┃',
+                multiline_horizontal: '━',
+                multiline_whole_line: '┏',
+                multiline_start_down: '╿',
+                bottom_right: '┙',
+                top_left: '┏',
+                top_right_flat: '┛',
+                bottom_left: '┗',
+                multiline_end_up: '╿',
+                multiline_end_same_line: '┛',
+                multiline_bottom_right_with_text: '┥',
+            },
+            (OutputTheme::Unicode, false) => UnderlineParts {
+                style: ElementStyle::UnderlineSecondary,
+                underline: '─',
+                label_start: '┬',
+                vertical_text_line: '│',
+                multiline_vertical: '│',
+                multiline_horizontal: '─',
+                multiline_whole_line: '┌',
+                multiline_start_down: '│',
+                bottom_right: '┘',
+                top_left: '┌',
+                top_right_flat: '┘',
+                bottom_left: '└',
+                multiline_end_up: '│',
+                multiline_end_same_line: '┘',
+                multiline_bottom_right_with_text: '┤',
+            },
         }
     }
 }
@@ -2423,6 +2640,12 @@ pub(crate) fn is_different(sm: &SourceMap<'_>, suggested: &str, range: Range<usi
         Some(s) => s != suggested,
         None => true,
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OutputTheme {
+    Ascii,
+    Unicode,
 }
 
 #[cfg(test)]
