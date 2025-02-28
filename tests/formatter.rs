@@ -1,5 +1,6 @@
 use annotate_snippets::{Annotation, AnnotationKind, Level, Patch, Renderer, Snippet};
 
+use annotate_snippets::renderer::OutputTheme;
 use snapbox::{assert_data_eq, str};
 
 #[test]
@@ -974,6 +975,7 @@ error[E0423]: expected value, found enum `A`
    |
 LL |     A.foo();
    |     ^
+   |
 help: you might have meant to use one of the following enum variants
    |
 LL -     A.foo();
@@ -1045,6 +1047,7 @@ LL |     pub struct Chaenomeles;
 ...
 LL |     banana::Chaenomeles.pick()
    |                         ^^^^ method not found in `Chaenomeles`
+   |
 help: the following traits which provide `pick` are implemented but not in scope; perhaps you want to import one of them
    |
 LL + use banana::Apple;
@@ -1083,6 +1086,7 @@ error[E0423]: expected value, found enum `A`
    |
 LL |     A.foo();
    |     ^
+   |
 help: make these changes and things will work
    |
 LL -     A.foo();
@@ -1119,6 +1123,7 @@ error[E0423]: Found `ThisIsVeryLong`
    |
 LL |     ThisIsVeryLong.foo();
    |     ^^^^^^^^^^^^^^
+   |
 help: make these changes and things will work
    |
 LL -     ThisIsVeryLong.foo();
@@ -1187,6 +1192,7 @@ LL |     self.qux();
    |     ^^^^^^^^^^ mutable borrow occurs here
 LL |     y();
    |     ^ immutable borrow later used here
+   |
 help: try explicitly pass `&Self` into the Closure as an argument
    |
 LL ~     let y = |this: &Self| {
@@ -1194,7 +1200,8 @@ LL ~         this.bar();
 LL |     };
 LL |     self.qux();
 LL ~     y(self);
-   |"#]];
+   |
+"#]];
     let renderer = Renderer::plain().anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input_new), expected);
 }
@@ -1260,12 +1267,14 @@ LL |     for _c in chars.by_ref() {
    |               first borrow later used here
 LL |         chars.next();
    |         ^^^^^ second mutable borrow occurs here
+   |
 help: if you want to call `next` on a iterator within the loop, consider using `while let`
    |
 LL ~     let iter = chars.by_ref();
 LL ~     while let Some(_c) = iter.next() {
 LL ~         iter.next();
-   |"#]];
+   |
+"#]];
     let renderer = Renderer::plain().anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input_new), expected);
 }
@@ -1322,6 +1331,7 @@ error[E0433]: failed to resolve: use of undeclared crate or module `st`
    |
 LL |     bar: st::cell::Cell<bool>
    |          ^^ use of undeclared crate or module `st`
+   |
 help: there is a crate or module with a similar name
    |
 LL |     bar: std::cell::Cell<bool>
@@ -1393,6 +1403,7 @@ LL | fn foo<T>(foo: Wrapper<T>)
    |        -       ^^^^^^^^^^ doesn't have a size known at compile-time
    |        |
    |        this type parameter needs to be `Sized`
+   |
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
    |
 LL - where
@@ -1400,7 +1411,8 @@ LL -     T
 LL -     :
 LL -     ?
 LL -     Sized
-   |"#]];
+   |
+"#]];
     let renderer = Renderer::plain().anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input_new), expected);
 }
@@ -1493,6 +1505,7 @@ LL | fn foo<T>(foo: Wrapper<T>)
    |        -       ^^^^^^^^^^ doesn't have a size known at compile-time
    |        |
    |        this type parameter needs to be `Sized`
+   |
 note: required by an implicit `Sized` bound in `Wrapper`
   --> $DIR/removal-of-multiline-trait-bound-in-where-clause.rs:2:16
    |
@@ -1513,7 +1526,8 @@ LL -     :
 LL -     ?
 LL -     Sized
 LL + and + Send
-   |"#]];
+   |
+"#]];
     let renderer = Renderer::plain().anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input_new), expected);
 }
@@ -1546,6 +1560,7 @@ zappy
         );
     let expected = str![[r#"
 error[E0277]: the size for values of type `T` cannot be known at compilation time
+   |
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
    |
 8  - cargo
@@ -1559,5 +1574,444 @@ help: consider removing the `?Sized` bound to make the type parameter `Sized`
    |
 "#]];
     let renderer = Renderer::plain();
+    assert_data_eq!(renderer.render(input_new), expected);
+}
+
+#[test]
+fn e0271() {
+    let source = r#"
+trait Future {
+    type Error;
+}
+
+impl<T, E> Future for Result<T, E> {
+    type Error = E;
+}
+
+impl<T> Future for Option<T> {
+    type Error = ();
+}
+
+struct Foo;
+
+fn foo() -> Box<dyn Future<Error=Foo>> {
+    Box::new(
+        Ok::<_, ()>(
+            Err::<(), _>(
+                Ok::<_, ()>(
+                    Err::<(), _>(
+                        Ok::<_, ()>(
+                            Err::<(), _>(Some(5))
+                        )
+                    )
+                )
+            )
+        )
+    )
+}
+fn main() {
+}
+"#;
+
+    let input_new = Level::Error
+        .message("type mismatch resolving `<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ...>>, ...>>, ...> as Future>::Error == Foo`")
+        .id("E0271")
+        .section(
+            Snippet::source(source)
+                .line_start(4)
+                .origin("$DIR/E0271.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(208..510)
+                        .label("type mismatch resolving `<Result<Result<(), Result<Result<(), ...>, ...>>, ...> as Future>::Error == Foo`"),
+                ),
+        )
+        .section(
+            Level::Note.title("expected this to be `Foo`")
+        )
+        .section(
+            Snippet::source(source)
+                .line_start(4)
+                .origin("$DIR/E0271.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(89..90)
+                ),
+        )
+        .section(
+            Level::Note.title("required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`")
+
+        );
+
+    let expected = str![[r#"
+error[E0271]: type mismatch resolving `<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ...>>, ...>>, ...> as Future>::Error == Foo`
+   ╭▸ $DIR/E0271.rs:20:5
+   │
+LL │ ┏     Box::new(
+LL │ ┃         Ok::<_, ()>(
+LL │ ┃             Err::<(), _>(
+LL │ ┃                 Ok::<_, ()>(
+   ‡ ┃
+LL │ ┃     )
+   │ ┗━━━━━┛ type mismatch resolving `<Result<Result<(), Result<Result<(), ...>, ...>>, ...> as Future>::Error == Foo`
+   ╰╴
+note: expected this to be `Foo`
+   ╭▸ $DIR/E0271.rs:10:18
+   │
+LL │     type Error = E;
+   │                  ━
+   ╰ note: required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`
+"#]];
+    let renderer = Renderer::plain()
+        .term_width(40)
+        .theme(OutputTheme::Unicode)
+        .anonymized_line_numbers(true);
+    assert_data_eq!(renderer.render(input_new), expected);
+}
+
+#[test]
+fn e0271_2() {
+    let source = r#"
+trait Future {
+    type Error;
+}
+
+impl<T, E> Future for Result<T, E> {
+    type Error = E;
+}
+
+impl<T> Future for Option<T> {
+    type Error = ();
+}
+
+struct Foo;
+
+fn foo() -> Box<dyn Future<Error=Foo>> {
+    Box::new(
+        Ok::<_, ()>(
+            Err::<(), _>(
+                Ok::<_, ()>(
+                    Err::<(), _>(
+                        Ok::<_, ()>(
+                            Err::<(), _>(Some(5))
+                        )
+                    )
+                )
+            )
+        )
+    )
+}
+fn main() {
+}
+"#;
+
+    let input_new = Level::Error
+        .message("type mismatch resolving `<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ...>>, ...>>, ...> as Future>::Error == Foo`")
+        .id("E0271")
+        .section(
+            Snippet::source(source)
+                .line_start(4)
+                .origin("$DIR/E0271.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(208..510)
+                        .label("type mismatch resolving `<Result<Result<(), Result<Result<(), ...>, ...>>, ...> as Future>::Error == Foo`"),
+                ),
+        )
+        .section(
+            Level::Note.title("expected this to be `Foo`")
+        )
+        .section(
+            Snippet::source(source)
+                .line_start(4)
+                .origin("$DIR/E0271.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(89..90)
+                ),
+        )
+        .section(
+            Level::Note.title("required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`")
+        ).section(
+            Level::Note.title("a second note")
+        );
+
+    let expected = str![[r#"
+error[E0271]: type mismatch resolving `<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ...>>, ...>>, ...> as Future>::Error == Foo`
+   ╭▸ $DIR/E0271.rs:20:5
+   │
+LL │ ┏     Box::new(
+LL │ ┃         Ok::<_, ()>(
+LL │ ┃             Err::<(), _>(
+LL │ ┃                 Ok::<_, ()>(
+   ‡ ┃
+LL │ ┃     )
+   │ ┗━━━━━┛ type mismatch resolving `<Result<Result<(), Result<Result<(), ...>, ...>>, ...> as Future>::Error == Foo`
+   ╰╴
+note: expected this to be `Foo`
+   ╭▸ $DIR/E0271.rs:10:18
+   │
+LL │     type Error = E;
+   │                  ━
+   ├ note: required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`
+   ╰ note: a second note
+"#]];
+    let renderer = Renderer::plain()
+        .term_width(40)
+        .theme(OutputTheme::Unicode)
+        .anonymized_line_numbers(true);
+    assert_data_eq!(renderer.render(input_new), expected);
+}
+
+#[test]
+fn long_e0308() {
+    let source = r#"
+mod a {
+    // Force the "short path for unique types" machinery to trip up
+    pub struct Atype;
+    pub struct Btype;
+    pub struct Ctype;
+}
+
+mod b {
+    pub struct Atype<T, K>(T, K);
+    pub struct Btype<T, K>(T, K);
+    pub struct Ctype<T, K>(T, K);
+}
+
+use b::*;
+
+fn main() {
+    let x: Atype<
+      Btype<
+        Ctype<
+          Atype<
+            Btype<
+              Ctype<
+                Atype<
+                  Btype<
+                    Ctype<i32, i32>,
+                    i32
+                  >,
+                  i32
+                >,
+                i32
+              >,
+              i32
+            >,
+            i32
+          >,
+          i32
+        >,
+        i32
+      >,
+      i32
+    > = Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+        Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+            Ok("")
+        ))))))))))))))))))))))))))))))
+    ))))))))))))))))))))))))))))));
+    //~^^^^^ ERROR E0308
+
+    let _ = Some(Ok(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(
+        Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(
+            Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(Some(
+                Some(Some(Some(Some(Some(Some(Some(Some(Some("")))))))))
+            )))))))))))))))))
+        ))))))))))))))))))
+    ))))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+        Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+            Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+        ))))))))))))))))))))))))))))))
+    ))))))))))))))))))))))));
+    //~^^^^^ ERROR E0308
+
+    let x: Atype<
+      Btype<
+        Ctype<
+          Atype<
+            Btype<
+              Ctype<
+                Atype<
+                  Btype<
+                    Ctype<i32, i32>,
+                    i32
+                  >,
+                  i32
+                >,
+                i32
+              >,
+              i32
+            >,
+            i32
+          >,
+          i32
+        >,
+        i32
+      >,
+      i32
+    > = ();
+    //~^ ERROR E0308
+
+    let _: () = Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+        Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+            Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+        ))))))))))))))))))))))))))))))
+    ))))))))))))))))))))))));
+    //~^^^^^ ERROR E0308
+}
+"#;
+
+    let input_new = Level::Error
+        .message("mismatched types")
+        .id("E0308")
+        .section(
+            Snippet::source(source)
+                .line_start(7)
+                .origin("$DIR/long-E0308.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(719..1001)
+                        .label("expected `Atype<Btype<Ctype<..., i32>, i32>, i32>`, found `Result<Result<Result<..., _>, _>, _>`"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(293..716)
+                        .label("expected due to this"),
+                ),
+        )
+        .section(
+            Level::Note.title("expected struct `Atype<Btype<..., i32>, i32>`\n     found enum `Result<Result<..., _>, _>`")
+        )
+        .section(
+            Level::Note.title("the full name for the type has been written to '$TEST_BUILD_DIR/$FILE.long-type-hash.txt'")
+        )
+        .section(
+            Level::Note.title("consider using `--verbose` to print the full type name to the console")
+        );
+
+    let expected = str![[r#"
+error[E0308]: mismatched types
+   ╭▸ $DIR/long-E0308.rs:48:9
+   │
+LL │        let x: Atype<
+   │ ┌─────────────┘
+LL │ │        Btype<
+LL │ │          Ctype<
+LL │ │            Atype<
+   ‡ │
+LL │ │        i32
+LL │ │      > = Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(O…
+   │ │┏━━━━━│━━━┛
+   │ └┃─────┤
+   │  ┃     expected due to this
+LL │  ┃         Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(O…
+LL │  ┃             Ok("")
+LL │  ┃         ))))))))))))))))))))))))))))))
+LL │  ┃     ))))))))))))))))))))))))))))));
+   │  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ expected `Atype<Btype<Ctype<..., i32>, i32>, i32>`, found `Result<Result<Result<..., _>, _>, _>`
+   │
+   ├ note: expected struct `Atype<Btype<..., i32>, i32>`
+   │            found enum `Result<Result<..., _>, _>`
+   ├ note: the full name for the type has been written to '$TEST_BUILD_DIR/$FILE.long-type-hash.txt'
+   ╰ note: consider using `--verbose` to print the full type name to the console
+"#]];
+    let renderer = Renderer::plain()
+        .term_width(60)
+        .theme(OutputTheme::Unicode)
+        .anonymized_line_numbers(true);
+    assert_data_eq!(renderer.render(input_new), expected);
+}
+
+#[test]
+fn highlighting() {
+    let source = r#"
+use core::pin::Pin;
+use core::future::Future;
+use core::any::Any;
+
+fn query(_: fn(Box<(dyn Any + Send + '_)>) -> Pin<Box<(
+    dyn Future<Output = Result<Box<(dyn Any + 'static)>, String>> + Send + 'static
+)>>) {}
+
+fn wrapped_fn<'a>(_: Box<(dyn Any + Send)>) -> Pin<Box<(
+    dyn Future<Output = Result<Box<(dyn Any + 'static)>, String>> + Send + 'static
+)>> {
+    Box::pin(async { Err("nope".into()) })
+}
+
+fn main() {
+    query(wrapped_fn);
+}
+"#;
+
+    let input_new = Level::Error
+        .message("mismatched types")
+        .id("E0308")
+        .section(
+            Snippet::source(source)
+                .line_start(7)
+                .origin("$DIR/unicode-output.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(430..440)
+                        .label("one type is more general than the other"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(424..429)
+                        .label("arguments to this function are incorrect"),
+                ),
+        )
+        .section(
+            Level::Note.title("expected fn pointer `for<'a> fn(Box<(dyn Any + Send + 'a)>) -> Pin<_>`\n      found fn item `fn(Box<(dyn Any + Send + 'static)>) -> Pin<_> {wrapped_fn}`")
+        )
+        .section(
+            Level::Note.title("function defined here")
+        )
+        .section(
+            Snippet::source(source)
+                .line_start(7)
+                .origin("$DIR/unicode-output.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(77..210),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(71..76)
+                ),
+        );
+
+    let expected = str![[r#"
+error[E0308]: mismatched types
+   ╭▸ $DIR/unicode-output.rs:23:11
+   │
+LL │     query(wrapped_fn);
+   │     ┬──── ━━━━━━━━━━ one type is more general than the other
+   │     │
+   │     arguments to this function are incorrect
+   │
+   ╰ note: expected fn pointer `for<'a> fn(Box<(dyn Any + Send + 'a)>) -> Pin<_>`
+                 found fn item `fn(Box<(dyn Any + Send + 'static)>) -> Pin<_> {wrapped_fn}`
+note: function defined here
+   ╭▸ $DIR/unicode-output.rs:12:10
+   │
+LL │   fn query(_: fn(Box<(dyn Any + Send + '_)>) -> Pin<Box<(
+   │ ┏━━━━─────━┛
+LL │ ┃     dyn Future<Output = Result<Box<(dyn Any + 'static)>, String>> + Send + 'static
+LL │ ┃ )>>) {}
+   ╰╴┗━━━┛
+"#]];
+    let renderer = Renderer::plain()
+        .theme(OutputTheme::Unicode)
+        .anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input_new), expected);
 }
