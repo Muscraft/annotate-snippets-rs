@@ -1258,6 +1258,15 @@ impl Renderer {
                         underline.style,
                     );
                 }
+                _ if annotation.highlight_source => {
+                    buffer.set_style_range(
+                        line_offset,
+                        (code_offset + annotation.start.display).saturating_sub(left),
+                        (code_offset + annotation.end.display).saturating_sub(left),
+                        underline.style,
+                        annotation.is_primary(),
+                    );
+                }
                 _ => {}
             }
         }
@@ -2469,6 +2478,9 @@ pub(crate) struct LineAnnotation<'a> {
     /// Is this a single line, multiline or multiline span minimized down to a
     /// smaller span.
     pub annotation_type: LineAnnotationType,
+
+    /// Whether the source code should be highlighted
+    pub highlight_source: bool,
 }
 
 impl LineAnnotation<'_> {
