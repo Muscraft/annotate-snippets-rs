@@ -2,7 +2,7 @@
 //!
 //! [parser-tests]: https://github.com/rust-lang/rust/blob/894f7a4ba6554d3797404bbf550d9919df060b97/compiler/rustc_parse/src/parser/tests.rs
 
-use annotate_snippets::{Level, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Group, Level, Renderer, Snippet};
 
 use snapbox::{assert_data_eq, str};
 
@@ -12,12 +12,14 @@ fn ends_on_col0() {
 fn foo() {
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(10..13).label("test")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(10..13).label("test")),
+        ),
     );
 
     let expected = str![[r#"
@@ -30,7 +32,7 @@ error: foo
   | |_^ test
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn ends_on_col2() {
@@ -40,12 +42,14 @@ fn foo() {
 
   }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(10..17).label("test")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(10..17).label("test")),
+        ),
     );
 
     let expected = str![[r#"
@@ -54,13 +58,12 @@ error: foo
   |
 2 |   fn foo() {
   |  __________^
-3 | |
-4 | |
+... |
 5 | |   }
   | |___^ test
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn non_nested() {
@@ -71,17 +74,23 @@ fn foo() {
   X2 Y2
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..32).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(17..35)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..32)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(17..35)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -98,7 +107,7 @@ error: foo
   |       `X` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn nested() {
@@ -108,17 +117,23 @@ fn foo() {
   Y1 X1
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(17..24)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(17..24)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -134,7 +149,7 @@ error: foo
   |       `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn different_overlap() {
@@ -146,17 +161,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..38).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(31..49)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..38)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..49)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -173,7 +194,7 @@ error: foo
   |  |____- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn triple_overlap() {
@@ -184,18 +205,24 @@ fn foo() {
   X2 Y2 Z2
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..38).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(17..41)
-                    .label("`Y` is a good letter too"),
-            )
-            .annotation(Level::Warning.span(20..44).label("`Z` label")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..38)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(17..41)
+                        .label("`Y` is a good letter too"),
+                )
+                .annotation(AnnotationKind::Context.span(20..44).label("`Z` label")),
+        ),
     );
 
     let expected = str![[r#"
@@ -214,7 +241,7 @@ error: foo
   |        `X` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn triple_exact_overlap() {
@@ -225,18 +252,24 @@ fn foo() {
   X2 Y2 Z2
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..38).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(14..38)
-                    .label("`Y` is a good letter too"),
-            )
-            .annotation(Level::Warning.span(14..38).label("`Z` label")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..38)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(14..38)
+                        .label("`Y` is a good letter too"),
+                )
+                .annotation(AnnotationKind::Context.span(14..38).label("`Z` label")),
+        ),
     );
 
     // This should have a `^` but we currently don't support the idea of a
@@ -248,14 +281,14 @@ error: foo
 3 | /   X0 Y0 Z0
 4 | |   X1 Y1 Z1
 5 | |   X2 Y2 Z2
-  | |    -
-  | |____|
-  |      `X` is a good letter
-  |      `Y` is a good letter too
+  | |    ^
+  | |    |
+  | |    `X` is a good letter
+  | |____`Y` is a good letter too
   |      `Z` label
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn minimum_depth() {
@@ -267,18 +300,24 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(28..44)
-                    .label("`Y` is a good letter too"),
-            )
-            .annotation(Level::Warning.span(36..52).label("`Z`")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(28..44)
+                        .label("`Y` is a good letter too"),
+                )
+                .annotation(AnnotationKind::Context.span(36..52).label("`Z`")),
+        ),
     );
 
     let expected = str![[r#"
@@ -299,7 +338,7 @@ error: foo
   |  |_______- `Z`
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn non_overlapping() {
@@ -311,17 +350,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(39..55)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(39..55)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -337,7 +382,7 @@ error: foo
   | |__________- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn overlapping_start_and_end() {
@@ -349,17 +394,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(31..55)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..55)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -377,7 +428,7 @@ error: foo
   |  |__________- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_primary_without_message() {
@@ -386,14 +437,20 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(18..25).label(""))
-            .annotation(Level::Warning.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(22..23).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(18..25).label(""))
+                .annotation(
+                    AnnotationKind::Context
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(22..23).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -404,7 +461,7 @@ error: foo
   |   ----^^^^-^^-- `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_secondary_without_message() {
@@ -413,13 +470,19 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..25).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(18..25).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -430,7 +493,7 @@ error: foo
   |   ^^^^-------^^ `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_primary_without_message_2() {
@@ -439,14 +502,20 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(18..25).label("`b` is a good letter"))
-            .annotation(Level::Warning.span(14..27).label(""))
-            .annotation(Level::Warning.span(22..23).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(18..25)
+                        .label("`b` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(14..27).label(""))
+                .annotation(AnnotationKind::Context.span(22..23).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -459,7 +528,7 @@ error: foo
   |       `b` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_secondary_without_message_2() {
@@ -468,13 +537,19 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label(""))
-            .annotation(Level::Warning.span(18..25).label("`b` is a good letter")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(14..27).label(""))
+                .annotation(
+                    AnnotationKind::Context
+                        .span(18..25)
+                        .label("`b` is a good letter"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -487,7 +562,7 @@ error: foo
   |       `b` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_secondary_without_message_3() {
@@ -496,13 +571,19 @@ fn foo() {
   a  bc  d
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..18).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..22).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..18)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(AnnotationKind::Context.span(18..22).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -515,7 +596,7 @@ error: foo
   |   `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_without_message() {
@@ -524,13 +605,15 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label(""))
-            .annotation(Level::Warning.span(18..25).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(14..27).label(""))
+                .annotation(AnnotationKind::Context.span(18..25).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -541,7 +624,7 @@ error: foo
   |   ^^^^-------^^
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_without_message_2() {
@@ -550,14 +633,16 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(18..25).label(""))
-            .annotation(Level::Warning.span(14..27).label(""))
-            .annotation(Level::Warning.span(22..23).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(18..25).label(""))
+                .annotation(AnnotationKind::Context.span(14..27).label(""))
+                .annotation(AnnotationKind::Context.span(22..23).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -568,7 +653,7 @@ error: foo
   |   ----^^^^-^^--
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn multiple_labels_with_message() {
@@ -577,13 +662,23 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter"))
-            .annotation(Level::Warning.span(18..25).label("`b` is a good letter")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(18..25)
+                        .label("`b` is a good letter"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -597,7 +692,7 @@ error: foo
   |   `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn ingle_label_with_message() {
@@ -606,12 +701,18 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("`a` is a good letter")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(14..27)
+                        .label("`a` is a good letter"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -622,7 +723,7 @@ error: foo
   |   ^^^^^^^^^^^^^ `a` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn single_label_without_message() {
@@ -631,12 +732,14 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(14..27).label("")),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(14..27).label("")),
+        ),
     );
 
     let expected = str![[r#"
@@ -647,7 +750,7 @@ error: foo
   |   ^^^^^^^^^^^^^
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn long_snippet() {
@@ -669,17 +772,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..27).label("`X` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(31..76)
-                    .label("`Y` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..27)
+                        .label("`X` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..76)
+                        .label("`Y` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -693,13 +802,15 @@ error: foo
    | ||____|
    |  |    `X` is a good letter
  5 |  | 1
+ 6 |  | 2
+ 7 |  | 3
 ...   |
 15 |  |   X2 Y2 Z2
 16 |  |   X3 Y3 Z3
    |  |__________- `Y` is a good letter too
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
 #[test]
 fn long_snippet_multiple_spans() {
@@ -721,17 +832,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::Error.title("foo").snippet(
-        Snippet::source(source)
-            .line_start(1)
-            .origin("test.rs")
-            .fold(true)
-            .annotation(Level::Error.span(17..73).label("`Y` is a good letter"))
-            .annotation(
-                Level::Warning
-                    .span(37..56)
-                    .label("`Z` is a good letter too"),
-            ),
+    let input = Level::Error.message("foo").group(
+        Group::new().element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("test.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(17..73)
+                        .label("`Y` is a good letter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(37..56)
+                        .label("`Z` is a good letter too"),
+                ),
+        ),
     );
 
     let expected = str![[r#"
@@ -750,12 +867,11 @@ error: foo
 10 | || 6
 11 | ||   X2 Y2 Z2
    | ||__________- `Z` is a good letter too
-12 | |  7
 ...  |
 15 | |  10
 16 | |    X3 Y3 Z3
    | |________^ `Y` is a good letter
 "#]];
     let renderer = Renderer::plain();
-    assert_data_eq!(renderer.render(input).to_string(), expected);
+    assert_data_eq!(renderer.render(input), expected);
 }
