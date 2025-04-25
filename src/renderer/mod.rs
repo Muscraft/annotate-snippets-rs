@@ -2430,7 +2430,9 @@ fn num_decimal_digits(num: usize) -> usize {
 }
 
 pub fn str_width(s: &str) -> usize {
-    s.chars().map(char_width).sum()
+    anstream::adapter::strip_str(s)
+        .map(|s| s.chars().map(char_width).sum::<usize>())
+        .sum()
 }
 
 pub fn char_width(ch: char) -> usize {
@@ -2754,7 +2756,7 @@ mod test {
     fn check_str_width3() {
         let str = "expected fn pointer `\u{1b}[1m\u{1b}[35mfor<'a>\u{1b}[0m fn(Box<\u{1b}[1m\u{1b}[35m(dyn Any + Send + 'a)\u{1b}[0m>) -> Pin<_>` found fn item `fn(Box<\u{1b}[1m\u{1b}[35m(dyn Any + Send + 'static)\u{1b}[0m>) -> Pin<_> \u{1b}[1m\u{1b}[35m{wrapped_fn}\u{1b}[0m`";
         let actual = str_width(str);
-        let expected = str!["197"];
+        let expected = str!["145"];
         assert_data_eq!(actual.to_string(), expected);
     }
 }
