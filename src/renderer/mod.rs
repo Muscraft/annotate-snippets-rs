@@ -2711,8 +2711,8 @@ pub enum OutputTheme {
 
 #[cfg(test)]
 mod test {
-    use super::OUTPUT_REPLACEMENTS;
-    use snapbox::IntoData;
+    use super::{str_width, OUTPUT_REPLACEMENTS};
+    use snapbox::{assert_data_eq, str, IntoData};
 
     fn format_replacements(replacements: Vec<(char, &str)>) -> String {
         replacements
@@ -2732,5 +2732,29 @@ mod test {
         let expected = format_replacements(expected);
         let actual = format_replacements(OUTPUT_REPLACEMENTS.to_owned());
         snapbox::assert_data_eq!(actual, expected.into_data().raw());
+    }
+
+    #[test]
+    fn check_str_width() {
+        let str = r#"    let _: &str = "🦀☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓  ☖☗☘☙☚☛☜☝☞☟☠☡☢☣☤☥☦☧☨☩☪☫☬☭☮☯☰☱☲☳☴☵☶☷☸☹☺☻☼☽☾☿♀♁♂♃♄♅♆♇♏♔♕♖♗♘♙♚♛♜♝♞♟♠♡♢♣♤♥♦♧♨♩♪♫♬♭♮♯♰♱♲♳♴♵♶♷♸♹♺♻♼♽♾♿⚀⚁⚂⚃⚄⚅⚆⚈⚉4🦀☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☖☗☘☙☚☛☜☝☞☟☠☡☢☣☤☥☦☧☨☩☪☫☬☭☮☯☰☱☲☳☴☵☶☷☸☹☺☻☼☽☾☿♀♁♂♃♄♅♆♇♏♔♕♖♗♘♙♚♛♜♝♞♟♠♡♢♣♤♥♦♧♨♩♪♫♬♭♮♯♰♱♲♳♴♵♶♷♸♹♺♻♼♽♾♿⚀⚁⚂⚃⚄⚅⚆⚈⚉4🦀🦀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☖☗☘☙☚☛☜☝☞☟☠☡☢☣☤☥☦☧☨☩☪☫☬☭☮☯☰☱☲☳☴☵☶☷☸☹☺☻☼☽☾☿♀♁♂♃♄♅♆♇♏♔♕♖♗♘♙♚♛♜♝♞♟♠♡♢♣♤♥♦♧♨♩♪♫♬♭♮♯♰♱♲♳♴♵♶♷♸♹♺♻♼♽♾♿⚀⚁⚂⚃⚄⚅⚆⚈⚉4"; let _: () = 42;  let _: &str = "🦀☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓  ☖☗☘☙☚☛☜☝☞☟☠☡☢☣☤☥☦☧☨☩☪☫☬☭☮☯☰☱☲☳☴☵☶☷☸☹☺☻☼☽☾☿♀♁♂♃♄♅♆♇♏♔♕♖♗♘♙♚♛♜♝♞♟♠♡♢♣♤♥♦♧♨♩♪♫♬♭♮♯♰♱♲♳♴♵♶♷♸♹♺♻♼♽♾♿⚀⚁⚂⚃⚄⚅⚆⚈⚉4🦀☀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☖☗☘☙☚☛☜☝☞☟☠☡☢☣☤☥☦☧☨☩☪☫☬☭☮☯☰☱☲☳☴☵☶☷☸☹☺☻☼☽☾☿♀♁♂♃♄♅♆♇♏♔♕♖♗♘♙♚♛♜♝♞♟♠♡♢♣♤♥♦♧♨♩♪♫♬♭♮♯♰♱♲♳♴♵♶♷♸♹♺♻♼♽♾♿⚀⚁⚂⚃⚄⚅⚆⚈⚉4🦀🦀☁☂☃☄★☆☇☈☉☊☋☌☍☎☏☐☑☒☓☖☗☘☙☚☛☜☝☞☟☠☡☢☣☤☥☦☧☨☩☪☫☬☭☮☯☰☱☲☳☴☵☶☷☸☹☺☻☼☽☾☿♀♁♂♃♄♅♆♇♏♔♕♖♗♘♙♚♛♜♝♞♟♠♡♢♣♤♥♦♧♨♩♪♫♬♭♮♯♰♱♲♳♴♵♶♷♸♹♺♻♼♽♾♿⚀⚁⚂⚃⚄⚅⚆⚈⚉4";"#;
+        let actual = str_width(str);
+        let expected = str!["836"];
+        assert_data_eq!(actual.to_string(), expected);
+    }
+
+    #[test]
+    fn check_str_width2() {
+        let str = "/*这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。这是宽的。*/?";
+        let actual = str_width(str);
+        let expected = str!["335"];
+        assert_data_eq!(actual.to_string(), expected);
+    }
+
+    #[test]
+    fn check_str_width3() {
+        let str = "expected fn pointer `\u{1b}[1m\u{1b}[35mfor<'a>\u{1b}[0m fn(Box<\u{1b}[1m\u{1b}[35m(dyn Any + Send + 'a)\u{1b}[0m>) -> Pin<_>` found fn item `fn(Box<\u{1b}[1m\u{1b}[35m(dyn Any + Send + 'static)\u{1b}[0m>) -> Pin<_> \u{1b}[1m\u{1b}[35m{wrapped_fn}\u{1b}[0m`";
+        let actual = str_width(str);
+        let expected = str!["197"];
+        assert_data_eq!(actual.to_string(), expected);
     }
 }
