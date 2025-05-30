@@ -121,11 +121,11 @@ impl<'a> SourceMap<'a> {
         let mut lines = vec![];
         let start = span.start;
         let end = span.end;
-        for line_info in &self.lines {
+        for (i, line_info) in self.lines.iter().enumerate() {
             if start >= line_info.end_byte {
                 continue;
             }
-            if end <= line_info.start_byte {
+            if end <= line_info.start_byte && i != 0 {
                 break;
             }
             lines.push(line_info);
