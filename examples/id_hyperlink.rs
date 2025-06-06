@@ -11,6 +11,7 @@ fn main() {
     let message = Level::ERROR
         .header("mismatched types")
         .id("E0308")
+        .id_url("https://doc.rust-lang.org/error_codes/E0308.html")
         .group(
             Group::new().element(
                 Snippet::source(source)
