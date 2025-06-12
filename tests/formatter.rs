@@ -2535,8 +2535,8 @@ LL |     let s: &str = include_bytes!("file.txt");   //~ ERROR mismatched types
    |            ----   ^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `&str`, found `&[u8; 0]`
    |            |
    |            expected due to this
-  expected reference `&str`
-              found reference `&'static [u8; 0]`
+   = expected reference `&str`
+        found reference `&'static [u8; 0]`
 "#]];
     let renderer = Renderer::plain().anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input), expected);
@@ -2583,7 +2583,7 @@ LL |     let s: &str = include_bytes!("file.txt");   //~ ERROR mismatched types
    |            expected due to this
    |
    = custom: expected reference `&str`
-              found reference `&'static [u8; 0]`
+                found reference `&'static [u8; 0]`
 "#]];
     let renderer = Renderer::plain().anonymized_line_numbers(true);
     assert_data_eq!(renderer.render(input), expected);
