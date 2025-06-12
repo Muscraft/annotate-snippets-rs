@@ -13,15 +13,13 @@ fn ends_on_col0() {
 fn foo() {
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(10..13).label("test")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(10..13).label("test")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -43,15 +41,13 @@ fn foo() {
 
   }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(10..17).label("test")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(10..17).label("test")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -75,24 +71,22 @@ fn foo() {
   X2 Y2
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..32)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(17..35)
-                        .label("`Y` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..32)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(17..35)
+                    .label("`Y` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -118,24 +112,22 @@ fn foo() {
   Y1 X1
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..27)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(17..24)
-                        .label("`Y` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(17..24)
+                    .label("`Y` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -162,24 +154,22 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(17..38)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(31..49)
-                        .label("`Y` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(17..38)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(31..49)
+                    .label("`Y` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -206,25 +196,23 @@ fn foo() {
   X2 Y2 Z2
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..38)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(17..41)
-                        .label("`Y` is a good letter too"),
-                )
-                .annotation(AnnotationKind::Context.span(20..44).label("`Z` label")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..38)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(17..41)
+                    .label("`Y` is a good letter too"),
+            )
+            .annotation(AnnotationKind::Context.span(20..44).label("`Z` label")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -253,25 +241,23 @@ fn foo() {
   X2 Y2 Z2
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..38)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(14..38)
-                        .label("`Y` is a good letter too"),
-                )
-                .annotation(AnnotationKind::Context.span(14..38).label("`Z` label")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..38)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(14..38)
+                    .label("`Y` is a good letter too"),
+            )
+            .annotation(AnnotationKind::Context.span(14..38).label("`Z` label")),
+    )];
 
     // This should have a `^` but we currently don't support the idea of a
     // "primary" annotation, which would solve this
@@ -301,25 +287,23 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(17..27)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(28..44)
-                        .label("`Y` is a good letter too"),
-                )
-                .annotation(AnnotationKind::Context.span(36..52).label("`Z`")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(17..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(28..44)
+                    .label("`Y` is a good letter too"),
+            )
+            .annotation(AnnotationKind::Context.span(36..52).label("`Z`")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -351,24 +335,22 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..27)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(39..55)
-                        .label("`Y` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(39..55)
+                    .label("`Y` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -395,24 +377,22 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(17..27)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(31..55)
-                        .label("`Y` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(17..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(31..55)
+                    .label("`Y` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -438,21 +418,19 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(18..25).label(""))
-                .annotation(
-                    AnnotationKind::Context
-                        .span(14..27)
-                        .label("`a` is a good letter"),
-                )
-                .annotation(AnnotationKind::Context.span(22..23).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(18..25).label(""))
+            .annotation(
+                AnnotationKind::Context
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(22..23).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -471,20 +449,18 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..27)
-                        .label("`a` is a good letter"),
-                )
-                .annotation(AnnotationKind::Context.span(18..25).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(18..25).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -503,21 +479,19 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(18..25)
-                        .label("`b` is a good letter"),
-                )
-                .annotation(AnnotationKind::Context.span(14..27).label(""))
-                .annotation(AnnotationKind::Context.span(22..23).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(18..25)
+                    .label("`b` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(14..27).label(""))
+            .annotation(AnnotationKind::Context.span(22..23).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -538,20 +512,18 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(14..27).label(""))
-                .annotation(
-                    AnnotationKind::Context
-                        .span(18..25)
-                        .label("`b` is a good letter"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(14..27).label(""))
+            .annotation(
+                AnnotationKind::Context
+                    .span(18..25)
+                    .label("`b` is a good letter"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -572,20 +544,18 @@ fn foo() {
   a  bc  d
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..18)
-                        .label("`a` is a good letter"),
-                )
-                .annotation(AnnotationKind::Context.span(18..22).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..18)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(AnnotationKind::Context.span(18..22).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -606,16 +576,14 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(14..27).label(""))
-                .annotation(AnnotationKind::Context.span(18..25).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(14..27).label(""))
+            .annotation(AnnotationKind::Context.span(18..25).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -634,17 +602,15 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(18..25).label(""))
-                .annotation(AnnotationKind::Context.span(14..27).label(""))
-                .annotation(AnnotationKind::Context.span(22..23).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(18..25).label(""))
+            .annotation(AnnotationKind::Context.span(14..27).label(""))
+            .annotation(AnnotationKind::Context.span(22..23).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -663,24 +629,22 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..27)
-                        .label("`a` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(18..25)
-                        .label("`b` is a good letter"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(18..25)
+                    .label("`b` is a good letter"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -702,19 +666,17 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(14..27)
-                        .label("`a` is a good letter"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(14..27)
+                    .label("`a` is a good letter"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -733,15 +695,13 @@ fn foo() {
   a { b { c } d }
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(AnnotationKind::Primary.span(14..27).label("")),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(AnnotationKind::Primary.span(14..27).label("")),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -773,24 +733,22 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(17..27)
-                        .label("`X` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(31..76)
-                        .label("`Y` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(17..27)
+                    .label("`X` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(31..76)
+                    .label("`Y` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -833,24 +791,22 @@ fn foo() {
   X3 Y3 Z3
 }
 "#;
-    let input = Level::ERROR.header("foo").group(
-        Group::new().element(
-            Snippet::source(source)
-                .line_start(1)
-                .origin("test.rs")
-                .fold(true)
-                .annotation(
-                    AnnotationKind::Primary
-                        .span(17..73)
-                        .label("`Y` is a good letter"),
-                )
-                .annotation(
-                    AnnotationKind::Context
-                        .span(37..56)
-                        .label("`Z` is a good letter too"),
-                ),
-        ),
-    );
+    let input = &[Group::new().element(Level::ERROR.title("foo")).element(
+        Snippet::source(source)
+            .line_start(1)
+            .origin("test.rs")
+            .fold(true)
+            .annotation(
+                AnnotationKind::Primary
+                    .span(17..73)
+                    .label("`Y` is a good letter"),
+            )
+            .annotation(
+                AnnotationKind::Context
+                    .span(37..56)
+                    .label("`Z` is a good letter too"),
+            ),
+    )];
 
     let expected = str![[r#"
 error: foo
@@ -887,32 +843,30 @@ fn issue_91334() {
 
 fn f(){||yield(((){),
 "#;
-    let input = Level::ERROR
-        .header("this file contains an unclosed delimiter")
-        .group(
-            Group::new().element(
-                Snippet::source(source)
-                    .line_start(1)
-                    .origin("$DIR/issue-91334.rs")
-                    .fold(true)
-                    .annotation(
-                        AnnotationKind::Context
-                            .span(151..152)
-                            .label("unclosed delimiter"),
-                    )
-                    .annotation(
-                        AnnotationKind::Context
-                            .span(159..160)
-                            .label("unclosed delimiter"),
-                    )
-                    .annotation(
-                        AnnotationKind::Context
-                            .span(164..164)
-                            .label("missing open `(` for this delimiter"),
-                    )
-                    .annotation(AnnotationKind::Primary.span(167..167)),
-            ),
-        );
+    let input = &[Group::new()
+        .element(Level::ERROR.title("this file contains an unclosed delimiter"))
+        .element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("$DIR/issue-91334.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Context
+                        .span(151..152)
+                        .label("unclosed delimiter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(159..160)
+                        .label("unclosed delimiter"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(164..164)
+                        .label("missing open `(` for this delimiter"),
+                )
+                .annotation(AnnotationKind::Primary.span(167..167)),
+        )];
     let expected = str![[r#"
 error: this file contains an unclosed delimiter
   --> $DIR/issue-91334.rs:7:23
@@ -958,11 +912,14 @@ fn main() {
     }
 }
 "#;
-    let input = Level::ERROR
-        .header("`break` with value from a `while` loop")
-        .id("E0571")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(
+                Level::ERROR
+                    .title("`break` with value from a `while` loop")
+                    .id("E0571"),
+            )
+            .element(
                 Snippet::source(source)
                     .line_start(1)
                     .origin("$DIR/issue-114529-illegal-break-with-value.rs")
@@ -978,21 +935,19 @@ fn main() {
                             .label("you can't `break` with a value in a `while` loop"),
                     ),
             ),
-        )
-        .group(
-            Group::new()
-                .element(
-                    Level::HELP
-                        .title("use `break` on its own without a value inside this `while` loop"),
-                )
-                .element(
-                    Snippet::source(source)
-                        .line_start(1)
-                        .origin("$DIR/issue-114529-illegal-break-with-value.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Context.span(483..581).label("break")),
-                ),
-        );
+        Group::new()
+            .element(
+                Level::HELP
+                    .title("use `break` on its own without a value inside this `while` loop"),
+            )
+            .element(
+                Snippet::source(source)
+                    .line_start(1)
+                    .origin("$DIR/issue-114529-illegal-break-with-value.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Context.span(483..581).label("break")),
+            ),
+    ];
     let expected = str![[r#"
 error[E0571]: `break` with value from a `while` loop
   --> $DIR/issue-114529-illegal-break-with-value.rs:22:9
@@ -1168,11 +1123,14 @@ fn nsize() {
 }
 "#;
     let input =
-        Level::ERROR
-            .header("`V0usize` cannot be safely transmuted into `[usize; 2]`")
-            .id("E0277")
-            .group(
-                Group::new().element(
+        &[
+            Group::new()
+                .element(
+                    Level::ERROR
+                        .title("`V0usize` cannot be safely transmuted into `[usize; 2]`")
+                        .id("E0277"),
+                )
+                .element(
                     Snippet::source(source)
                         .line_start(1)
                         .origin("$DIR/primitive_reprs_should_have_correct_length.rs")
@@ -1181,27 +1139,25 @@ fn nsize() {
                             "the size of `V0usize` is smaller than the size of `[usize; 2]`",
                         )),
                 ),
-            )
-            .group(
-                Group::new()
-                    .element(Level::NOTE.title("required by a bound in `is_transmutable`"))
-                    .element(
-                        Snippet::source(source)
-                            .line_start(1)
-                            .origin("$DIR/primitive_reprs_should_have_correct_length.rs")
-                            .fold(true)
-                            .annotation(
-                                AnnotationKind::Context
-                                    .span(225..240)
-                                    .label("required by a bound in this function"),
-                            )
-                            .annotation(
-                                AnnotationKind::Primary
-                                    .span(276..470)
-                                    .label("required by this bound in `is_transmutable`"),
-                            ),
-                    ),
-            );
+            Group::new()
+                .element(Level::NOTE.title("required by a bound in `is_transmutable`"))
+                .element(
+                    Snippet::source(source)
+                        .line_start(1)
+                        .origin("$DIR/primitive_reprs_should_have_correct_length.rs")
+                        .fold(true)
+                        .annotation(
+                            AnnotationKind::Context
+                                .span(225..240)
+                                .label("required by a bound in this function"),
+                        )
+                        .annotation(
+                            AnnotationKind::Primary
+                                .span(276..470)
+                                .label("required by this bound in `is_transmutable`"),
+                        ),
+                ),
+        ];
     let expected = str![[r#"
 error[E0277]: `V0usize` cannot be safely transmuted into `[usize; 2]`
   --> $DIR/primitive_reprs_should_have_correct_length.rs:144:44
@@ -1254,11 +1210,9 @@ fn main() {
     assert::is_maybe_transmutable::<&'static [u8; 0], &'static [u16; 0]>(); //~ ERROR `&[u8; 0]` cannot be safely transmuted into `&[u16; 0]`
 }
 "#;
-    let input = Level::ERROR
-        .header("`&[u8; 0]` cannot be safely transmuted into `&[u16; 0]`")
-        .id("E027s7")
-        .group(
-            Group::new().element(
+    let input = &[Group::new().element(Level::ERROR
+        .title("`&[u8; 0]` cannot be safely transmuted into `&[u16; 0]`")
+        .id("E027s7")).element(
                 Snippet::source(source)
                     .line_start(1)
                     .fold(true)
@@ -1268,8 +1222,7 @@ fn main() {
                             .span(442..459)
                             .label("the minimum alignment of `&[u8; 0]` (1) should be greater than that of `&[u16; 0]` (2)")
                     ),
-            ),
-        );
+            )];
     let expected = str![[r#"
 error[E027s7]: `&[u8; 0]` cannot be safely transmuted into `&[u16; 0]`
   --> $DIR/align-fail.rs:21:55
@@ -1323,11 +1276,14 @@ fn g() {
 }
 fn main() {}
 "#;
-    let input = Level::ERROR
-        .header("expected function, found `{integer}`")
-        .id("E0618")
-        .group(
-            Group::new().element(
+    let input =
+        &[Group::new()
+            .element(
+                Level::ERROR
+                    .title("expected function, found `{integer}`")
+                    .id("E0618"),
+            )
+            .element(
                 Snippet::source(source)
                     .line_start(1)
                     .origin("$DIR/missing-semicolon.rs")
@@ -1346,8 +1302,7 @@ fn main() {}
                         "help: consider using a semicolon here to finish the statement: `;`",
                     ))
                     .annotation(AnnotationKind::Primary.span(108..109)),
-            ),
-        );
+            )];
     let expected = str![[r#"
 error[E0618]: expected function, found `{integer}`
   --> $DIR/missing-semicolon.rs:5:13
@@ -1414,10 +1369,9 @@ macro_rules! outer_macro {
 
 outer_macro!(FirstStruct, FirstAttrStruct);
 "#;
-    let input = Level::WARNING
-        .header("non-local `macro_rules!` definition, `#[macro_export]` macro should be written at top level module")
-        .group(
-            Group::new()
+    let input =
+           &[ Group::new().element(Level::WARNING
+                .title("non-local `macro_rules!` definition, `#[macro_export]` macro should be written at top level module"))
                 .element(
                     Snippet::source(aux_source)
                         .line_start(1)
@@ -1449,8 +1403,6 @@ outer_macro!(FirstStruct, FirstAttrStruct);
                     Level::NOTE
                         .title("a `macro_rules!` definition is non-local if it is nested inside an item and has a `#[macro_export]` attribute")
                 ),
-        )
-        .group(
             Group::new()
                 .element(Level::NOTE.title("the lint level is defined here"))
                 .element(
@@ -1459,8 +1411,7 @@ outer_macro!(FirstStruct, FirstAttrStruct);
                         .origin("$DIR/nested-macro-rules.rs")
                         .fold(true)
                         .annotation(AnnotationKind::Primary.span(224..245)),
-                ),
-        );
+                )];
     let expected = str![[r#"
 warning: non-local `macro_rules!` definition, `#[macro_export]` macro should be written at top level module
   --> $DIR/auxiliary/nested-macro-rules.rs:7:9
@@ -1547,29 +1498,30 @@ macro_rules! inline {
     () => ()
 }
 "#;
-    let input = Level::ERROR
-        .header("can't call method `pow` on ambiguous numeric type `{integer}`")
-        .id("E0689")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(
+                Level::ERROR
+                    .title("can't call method `pow` on ambiguous numeric type `{integer}`")
+                    .id("E0689"),
+            )
+            .element(
                 Snippet::source(source)
                     .line_start(1)
                     .origin("$DIR/method-on-ambiguous-numeric-type.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(916..919)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::HELP.title("you must specify a type for this binding, like `i32`"))
-                .element(
-                    Snippet::source(aux_source)
-                        .line_start(1)
-                        .origin("$DIR/auxiliary/macro-in-other-crate.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Context.span(69..69).label(": i32")),
-                ),
-        );
+        Group::new()
+            .element(Level::HELP.title("you must specify a type for this binding, like `i32`"))
+            .element(
+                Snippet::source(aux_source)
+                    .line_start(1)
+                    .origin("$DIR/auxiliary/macro-in-other-crate.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Context.span(69..69).label(": i32")),
+            ),
+    ];
     let expected = str![[r#"
 error[E0689]: can't call method `pow` on ambiguous numeric type `{integer}`
   --> $DIR/method-on-ambiguous-numeric-type.rs:37:9
@@ -1611,20 +1563,17 @@ fn courier_to_des_moines_and_points_west(data: &[u32]) -> String {
 fn main() {}
 "#;
 
-    let input = Level::ERROR
-        .header("type annotations needed")
-        .id("E0282")
-        .group(
-            Group::new().element(
-                Snippet::source(source)
-                    .line_start(1)
-                    .origin("$DIR/issue-42234-unknown-receiver-type.rs")
-                    .fold(true)
-                    .annotation(AnnotationKind::Primary.span(536..539).label(
-                        "cannot infer type of the type parameter `S` declared on the method `sum`",
-                    )),
-            ),
-        );
+    let input = &[Group::new()
+        .element(Level::ERROR.title("type annotations needed").id("E0282"))
+        .element(
+            Snippet::source(source)
+                .line_start(1)
+                .origin("$DIR/issue-42234-unknown-receiver-type.rs")
+                .fold(true)
+                .annotation(AnnotationKind::Primary.span(536..539).label(
+                    "cannot infer type of the type parameter `S` declared on the method `sum`",
+                )),
+        )];
     let expected = str![[r#"
 error[E0282]: type annotations needed
   --> $DIR/issue-42234-unknown-receiver-type.rs:15:10
@@ -1717,13 +1666,12 @@ fn nonempty<const N: usize>(arrayN_of_empty: [!; N]) {
 fn main() {}
 "##;
 
-    let input = Level::ERROR
-        .header(
-            "non-exhaustive patterns: `NonEmptyEnum5::V1`, `NonEmptyEnum5::V2`, `NonEmptyEnum5::V3` and 2 more not covered"
-        )
-        .id("E0004")
-        .group(
-            Group::new().element(
+    let input =
+           &[ Group::new().element( Level::ERROR
+                .title(
+                    "non-exhaustive patterns: `NonEmptyEnum5::V1`, `NonEmptyEnum5::V2`, `NonEmptyEnum5::V3` and 2 more not covered"
+                )
+                .id("E0004")).element(
                 Snippet::source(source)
                     .line_start(1)
                     .origin("$DIR/empty-match.rs")
@@ -1734,8 +1682,6 @@ fn main() {}
                             .label("patterns `NonEmptyEnum5::V1`, `NonEmptyEnum5::V2`, `NonEmptyEnum5::V3` and 2 more not covered")
                     ),
             ),
-        )
-        .group(
             Group::new()
                 .element(Level::NOTE.title("`NonEmptyEnum5` defined here"))
                 .element(
@@ -1751,9 +1697,8 @@ fn main() {}
                         .annotation(AnnotationKind::Context.span(890..892).label("not covered"))
                 )
                 .element(Level::NOTE.title("the matched value is of type `NonEmptyEnum5`"))
-                .element(Level::NOTE.title("match arms with guards don't count towards exhaustivity"))
-        )
-        .group(
+                .element(Level::NOTE.title("match arms with guards don't count towards exhaustivity")
+        ),
             Group::new()
                 .element(
                     Level::HELP
@@ -1765,8 +1710,8 @@ fn main() {}
                         .origin("$DIR/empty-match.rs")
                         .fold(true)
                         .annotation(AnnotationKind::Context.span(485..485).label(",\n                _ => todo!()"))
-                )
-        );
+
+        )];
     let expected = str![[r#"
 error[E0004]: non-exhaustive patterns: `NonEmptyEnum5::V1`, `NonEmptyEnum5::V2`, `NonEmptyEnum5::V3` and 2 more not covered
   --> $DIR/empty-match.rs:71:24
@@ -1819,11 +1764,9 @@ fn main() {
     //~^ ERROR must be specified
 }
 "#;
-    let input = Level::ERROR
-        .header("the trait alias `EqAlias` is not dyn compatible")
-        .id("E0038")
-        .group(
-            Group::new().element(
+    let input = &[Group::new().element(Level::ERROR
+        .title("the trait alias `EqAlias` is not dyn compatible")
+        .id("E0038")).element(
                 Snippet::source(source)
                     .line_start(1)
                     .origin("$DIR/object-fail.rs")
@@ -1834,8 +1777,6 @@ fn main() {
                             .label("`EqAlias` is not dyn compatible"),
                     ),
             ),
-        )
-        .group(
             Group::new()
                 .element(
                     Level::NOTE
@@ -1858,8 +1799,7 @@ fn main() {
                                 .span(32..39)
                                 .label("this trait is not dyn compatible..."),
                         ),
-                ),
-        );
+                )];
     let expected = str![[r#"
 error[E0038]: the trait alias `EqAlias` is not dyn compatible
   --> $DIR/object-fail.rs:7:17
@@ -1891,8 +1831,9 @@ const C: u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 fn main() {}
 "#;
-    let input = Level::ERROR.header("mismatched types").id("E0038").group(
-        Group::new().element(
+    let input = &[Group::new()
+        .element(Level::ERROR.title("mismatched types").id("E0038"))
+        .element(
             Snippet::source(source)
                 .origin("$DIR/long-span.rs")
                 .fold(true)
@@ -1901,8 +1842,7 @@ fn main() {}
                         .span(15..5055)
                         .label("expected `u8`, found `[{integer}; 1680]`"),
                 ),
-        ),
-    );
+        )];
     let expected = str![[r#"
 error[E0038]: mismatched types
   --> $DIR/long-span.rs:2:15
@@ -1925,8 +1865,9 @@ const C: u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 fn main() {}
 "#;
-    let input = Level::ERROR.header("mismatched types").id("E0038").group(
-        Group::new().element(
+    let input = &[Group::new()
+        .element(Level::ERROR.title("mismatched types").id("E0038"))
+        .element(
             Snippet::source(source)
                 .origin("$DIR/long-span.rs")
                 .fold(true)
@@ -1935,8 +1876,7 @@ fn main() {}
                         .span(15..5055)
                         .label("expected `u8`, found `[{integer}; 1680]`"),
                 ),
-        ),
-    );
+        )];
     let expected = str![[r#"
 error[E0038]: mismatched types
    ╭▸ $DIR/long-span.rs:2:15
@@ -1960,8 +1900,9 @@ const C: u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 fn main() {}
 "#;
-    let input = Level::ERROR.header("mismatched types").id("E0038").group(
-        Group::new().element(
+    let input = &[Group::new()
+        .element(Level::ERROR.title("mismatched types").id("E0038"))
+        .element(
             Snippet::source(source)
                 .origin("$DIR/long-span.rs")
                 .fold(true)
@@ -1970,8 +1911,7 @@ fn main() {}
                         .span(15..5055)
                         .label("expected `u8`, found `[{integer}; 1680]`"),
                 ),
-        ),
-    );
+        )];
     let expected = str![[r#"
 error[E0038]: mismatched types
    ╭▸ $DIR/long-span.rs:2:15
@@ -1995,8 +1935,9 @@ const C: u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 fn main() {}
 "#;
-    let input = Level::ERROR.header("mismatched types").id("E0038").group(
-        Group::new().element(
+    let input = &[Group::new()
+        .element(Level::ERROR.title("mismatched types").id("E0038"))
+        .element(
             Snippet::source(source)
                 .origin("$DIR/long-span.rs")
                 .fold(true)
@@ -2005,8 +1946,7 @@ fn main() {}
                         .span(15..5055)
                         .label("expected `u8`, found `[{integer}; 1680]`"),
                 ),
-        ),
-    );
+        )];
     let expected = str![[r#"
 error[E0038]: mismatched types
   --> $DIR/long-span.rs:2:15
@@ -2046,10 +1986,8 @@ fn main() {
 }
 "#;
 
-    let input = Level::ERROR
-        .header("`Iterator::map` call that discard the iterator's values")
-        .group(
-            Group::new()
+    let input = &[Group::new().element(Level::ERROR
+        .title("`Iterator::map` call that discard the iterator's values"))
                 .element(
                     Snippet::source(source)
                         .origin("$DIR/lint_map_unit_fn.rs")
@@ -2071,8 +2009,6 @@ fn main() {
                 )
                 .element(
                     Level::NOTE.title("`Iterator::map`, like many of the methods on `Iterator`, gets executed lazily, meaning that its effects won't be visible until it is iterated")),
-        )
-        .group(
             Group::new()
                 .element(Level::HELP.title("you might have meant to use `Iterator::for_each`"))
                 .element(
@@ -2080,8 +2016,7 @@ fn main() {
                         .origin("$DIR/lint_map_unit_fn.rs")
                         .fold(true)
                         .patch(Patch::new(267..270, r#"for_each"#)),
-                ),
-        );
+                )];
 
     let expected = str![[r#"
 error: `Iterator::map` call that discard the iterator's values
@@ -2141,27 +2076,25 @@ fn main() {
 }
 "#;
 
-    let input = Level::ERROR
-        .header("character constant must be escaped: `\\n`")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("character constant must be escaped: `\\n`"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/bad-char-literals.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(204..205)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::HELP.title("escape the character"))
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/bad-char-literals.rs")
-                        .line_start(1)
-                        .fold(true)
-                        .patch(Patch::new(204..205, r#"\n"#)),
-                ),
-        );
+        Group::new()
+            .element(Level::HELP.title("escape the character"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/bad-char-literals.rs")
+                    .line_start(1)
+                    .fold(true)
+                    .patch(Patch::new(204..205, r#"\n"#)),
+            ),
+    ];
     let expected = str![[r#"
 error: character constant must be escaped: `/n`
   --> $DIR/bad-char-literals.rs:10:6
@@ -2196,26 +2129,24 @@ fn unclosed_1() {
 fn main() {}
 "#;
 
-    let input = Level::ERROR
-        .header("unclosed frontmatter")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("unclosed frontmatter"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/unclosed-1.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(0..221)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::NOTE.title("frontmatter opening here was not closed"))
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/unclosed-1.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(0..4)),
-                ),
-        );
+        Group::new()
+            .element(Level::NOTE.title("frontmatter opening here was not closed"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/unclosed-1.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(0..4)),
+            ),
+    ];
     let expected = str![[r#"
 error: unclosed frontmatter
   --> $DIR/unclosed-1.rs:1:1
@@ -2256,26 +2187,24 @@ fn foo() -> &str {
 }
 "#;
 
-    let input = Level::ERROR
-        .header("unclosed frontmatter")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("unclosed frontmatter"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/unclosed-2.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(0..377)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::NOTE.title("frontmatter opening here was not closed"))
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/unclosed-2.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(0..4)),
-                ),
-        );
+        Group::new()
+            .element(Level::NOTE.title("frontmatter opening here was not closed"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/unclosed-2.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(0..4)),
+            ),
+    ];
     let expected = str![[r#"
 error: unclosed frontmatter
   --> $DIR/unclosed-2.rs:1:1
@@ -2318,28 +2247,24 @@ fn foo(x: i32) -> i32 {
 //~^ ERROR: unexpected closing delimiter: `}`
 "#;
 
-    let input = Level::ERROR
-        .header("invalid preceding whitespace for frontmatter close")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("invalid preceding whitespace for frontmatter close"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/unclosed-3.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(302..310)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(
-                    Level::NOTE.title("frontmatter close should not be preceded by whitespace"),
-                )
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/unclosed-3.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(302..306)),
-                ),
-        );
+        Group::new()
+            .element(Level::NOTE.title("frontmatter close should not be preceded by whitespace"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/unclosed-3.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(302..306)),
+            ),
+    ];
     let expected = str![[r#"
 error: invalid preceding whitespace for frontmatter close
   --> $DIR/unclosed-3.rs:12:1
@@ -2372,26 +2297,24 @@ fn unclosed_4() {
 fn main() {}
 "#;
 
-    let input = Level::ERROR
-        .header("unclosed frontmatter")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("unclosed frontmatter"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/unclosed-4.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(0..43)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::NOTE.title("frontmatter opening here was not closed"))
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/unclosed-4.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(0..4)),
-                ),
-        );
+        Group::new()
+            .element(Level::NOTE.title("frontmatter opening here was not closed"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/unclosed-4.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(0..4)),
+            ),
+    ];
     let expected = str![[r#"
 error: unclosed frontmatter
   --> $DIR/unclosed-4.rs:1:1
@@ -2427,26 +2350,24 @@ use std::env;
 fn main() {}
 "#;
 
-    let input = Level::ERROR
-        .header("unclosed frontmatter")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("unclosed frontmatter"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/unclosed-5.rs")
                     .fold(true)
                     .annotation(AnnotationKind::Primary.span(0..176)),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::NOTE.title("frontmatter opening here was not closed"))
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/unclosed-5.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(0..4)),
-                ),
-        );
+        Group::new()
+            .element(Level::NOTE.title("frontmatter opening here was not closed"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/unclosed-5.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(0..4)),
+            ),
+    ];
 
     let expected = str![[r#"
 error: unclosed frontmatter
@@ -2551,11 +2472,9 @@ pub enum E2 {
 }
 "#;
 
-    let input = Level::ERROR
-        .header("expected unit struct, unit variant or constant, found tuple variant `E1::Z1`")
-        .id(r#"E0532"#)
-        .group(
-            Group::new()
+    let input = &[Group::new().element(Level::ERROR
+        .title("expected unit struct, unit variant or constant, found tuple variant `E1::Z1`")
+        .id(r#"E0532"#))
                 .element(
                     Snippet::source(source)
                         .origin("$DIR/pat-tuple-field-count-cross.rs")
@@ -2577,8 +2496,6 @@ pub enum E2 {
                                 .label("similarly named unit variant `Z0` defined here"),
                         ),
                 ),
-        )
-        .group(
             Group::new()
                 .element(Level::HELP.title("use the tuple variant pattern syntax instead"))
                 .element(
@@ -2587,8 +2504,6 @@ pub enum E2 {
                         .fold(true)
                         .patch(Patch::new(1760..1766, r#"E1::Z1()"#)),
                 ),
-        )
-        .group(
             Group::new()
                 .element(Level::HELP.title("a unit variant with a similar name exists"))
                 .element(
@@ -2596,8 +2511,7 @@ pub enum E2 {
                         .origin("$DIR/pat-tuple-field-count-cross.rs")
                         .fold(true)
                         .patch(Patch::new(1764..1766, r#"Z0"#)),
-                ),
-        );
+                )];
     let expected = str![[r#"
 error[E0532]: expected unit struct, unit variant or constant, found tuple variant `E1::Z1`
   --> $DIR/pat-tuple-field-count-cross.rs:35:9
@@ -2636,8 +2550,9 @@ fn unterminated_nested_comment() {
 */
 "#;
 
-    let input = Level::ERROR.header("unterminated block comment").id("E0758").group(
-        Group::new().element(
+    let input = &[Group::new()
+        .element(Level::ERROR.title("unterminated block comment").id("E0758"))
+        .element(
             Snippet::source(source)
                 .origin("$DIR/unterminated-nested-comment.rs")
                 .fold(true)
@@ -2655,8 +2570,7 @@ fn unterminated_nested_comment() {
                         .label("...and last nested comment terminates here."),
                 )
                 .annotation(AnnotationKind::Primary.span(0..31)),
-        ),
-    );
+        )];
 
     let expected = str![[r#"
 error[E0758]: unterminated block comment
@@ -2692,38 +2606,37 @@ fn mismatched_types1() {
     let s: &str = include_bytes!("file.txt");   //~ ERROR mismatched types
 }"#;
 
-    let input = Level::ERROR.header("mismatched types").id("E0308").group(
-        Group::new()
-            .element(
-                Snippet::source(file_txt_source)
-                    .fold(true)
-                    .line_start(3)
-                    .origin("$DIR/file.txt")
-                    .annotation(
-                        AnnotationKind::Primary
-                            .span(0..0)
-                            .label("expected `&[u8]`, found `&str`"),
-                    ),
-            )
-            .element(
-                Snippet::source(rust_source)
-                    .origin("$DIR/mismatched-types.rs")
-                    .fold(true)
-                    .annotation(
-                        AnnotationKind::Context
-                            .span(23..28)
-                            .label("expected due to this"),
-                    )
-                    .annotation(
-                        AnnotationKind::Context
-                            .span(31..55)
-                            .label("in this macro invocation"),
-                    ),
-            )
-            .element(
-                Level::NOTE.title("expected reference `&[u8]`\n   found reference `&'static str`"),
-            ),
-    );
+    let input = &[Group::new()
+        .element(Level::ERROR.title("mismatched types").id("E0308"))
+        .element(
+            Snippet::source(file_txt_source)
+                .fold(true)
+                .line_start(3)
+                .origin("$DIR/file.txt")
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(0..0)
+                        .label("expected `&[u8]`, found `&str`"),
+                ),
+        )
+        .element(
+            Snippet::source(rust_source)
+                .origin("$DIR/mismatched-types.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Context
+                        .span(23..28)
+                        .label("expected due to this"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(31..55)
+                        .label("in this macro invocation"),
+                ),
+        )
+        .element(
+            Level::NOTE.title("expected reference `&[u8]`\n   found reference `&'static str`"),
+        )];
 
     let expected = str![[r#"
 error[E0308]: mismatched types
@@ -2755,28 +2668,26 @@ fn mismatched_types2() {
     let s: &str = include_bytes!("file.txt");   //~ ERROR mismatched types
 }"#;
 
-    let input = Level::ERROR.header("mismatched types").id("E0308").group(
-        Group::new()
-            .element(
-                Snippet::source(source)
-                    .origin("$DIR/mismatched-types.rs")
-                    .fold(true)
-                    .annotation(
-                        AnnotationKind::Primary
-                            .span(105..131)
-                            .label("expected `&str`, found `&[u8; 0]`"),
-                    )
-                    .annotation(
-                        AnnotationKind::Context
-                            .span(98..102)
-                            .label("expected due to this"),
-                    ),
-            )
-            .element(
-                Level::NOTE
-                    .title("expected reference `&str`\n   found reference `&'static [u8; 0]`"),
-            ),
-    );
+    let input = &[Group::new()
+        .element(Level::ERROR.title("mismatched types").id("E0308"))
+        .element(
+            Snippet::source(source)
+                .origin("$DIR/mismatched-types.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(105..131)
+                        .label("expected `&str`, found `&[u8; 0]`"),
+                )
+                .annotation(
+                    AnnotationKind::Context
+                        .span(98..102)
+                        .label("expected due to this"),
+                ),
+        )
+        .element(
+            Level::NOTE.title("expected reference `&str`\n   found reference `&'static [u8; 0]`"),
+        )];
 
     let expected = str![[r#"
 error[E0308]: mismatched types
@@ -2809,11 +2720,10 @@ fn main() {
 }
 "#;
 
-    let input = Level::ERROR
-        .header("mismatched types")
-        .id("E0308")
-        .group(
-            Group::new().element(
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("mismatched types").id("E0308"))
+            .element(
                 Snippet::source(source)
                     .origin("$DIR/short-error-format.rs")
                     .fold(true)
@@ -2828,18 +2738,16 @@ fn main() {
                             .label("arguments to this function are incorrect"),
                     ),
             ),
-        )
-        .group(
-            Group::new()
-                .element(Level::NOTE.title("function defined here"))
-                .element(
-                    Snippet::source(source)
-                        .origin("$DIR/short-error-format.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Context.span(48..54).label(""))
-                        .annotation(AnnotationKind::Primary.span(44..47)),
-                ),
-        );
+        Group::new()
+            .element(Level::NOTE.title("function defined here"))
+            .element(
+                Snippet::source(source)
+                    .origin("$DIR/short-error-format.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Context.span(48..54).label(""))
+                    .annotation(AnnotationKind::Primary.span(44..47)),
+            ),
+    ];
 
     let expected = str![[r#"
 $DIR/short-error-format.rs:6:9: error[E0308]: mismatched types: expected `u32`, found `String`
@@ -2865,21 +2773,22 @@ fn main() {
 }
 "#;
 
-    let input = Level::ERROR
-        .header("no method named `salut` found for type `u32` in the current scope")
-        .id("E0599")
-        .group(
-            Group::new().element(
-                Snippet::source(source)
-                    .origin("$DIR/short-error-format.rs")
-                    .fold(true)
-                    .annotation(
-                        AnnotationKind::Primary
-                            .span(127..132)
-                            .label("method not found in `u32`"),
-                    ),
-            ),
-        );
+    let input = &[Group::new()
+        .element(
+            Level::ERROR
+                .title("no method named `salut` found for type `u32` in the current scope")
+                .id("E0599"),
+        )
+        .element(
+            Snippet::source(source)
+                .origin("$DIR/short-error-format.rs")
+                .fold(true)
+                .annotation(
+                    AnnotationKind::Primary
+                        .span(127..132)
+                        .label("method not found in `u32`"),
+                ),
+        )];
 
     let expected = str![[r#"
 $DIR/short-error-format.rs:8:7: error[E0599]: no method named `salut` found for type `u32` in the current scope: method not found in `u32`
@@ -2903,43 +2812,37 @@ pub struct Foo; //~^ ERROR
     let source_1 = r#"/// This is a long line that contains a http://link.com
 "#;
 
-    let input = Level::ERROR
-        .header("this URL is not a hyperlink")
-        .group(
-            Group::new()
-                .element(
-                    Snippet::source(source_0)
-                        .origin("$DIR/diagnostic-width.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(111..126)),
-                )
-                .element(
-                    Level::NOTE
-                        .title("bare URLs are not automatically turned into clickable links"),
-                ),
-        )
-        .group(
-            Group::new()
-                .element(Level::NOTE.title("the lint level is defined here"))
-                .element(
-                    Snippet::source(source_0)
-                        .origin("$DIR/diagnostic-width.rs")
-                        .fold(true)
-                        .annotation(AnnotationKind::Primary.span(49..67)),
-                ),
-        )
-        .group(
-            Group::new()
-                .element(Level::HELP.title("use an automatic link instead"))
-                .element(
-                    Snippet::source(source_1)
-                        .origin("$DIR/diagnostic-width.rs")
-                        .line_start(4)
-                        .fold(true)
-                        .patch(Patch::new(40..40, "<"))
-                        .patch(Patch::new(55..55, ">")),
-                ),
-        );
+    let input = &[
+        Group::new()
+            .element(Level::ERROR.title("this URL is not a hyperlink"))
+            .element(
+                Snippet::source(source_0)
+                    .origin("$DIR/diagnostic-width.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(111..126)),
+            )
+            .element(
+                Level::NOTE.title("bare URLs are not automatically turned into clickable links"),
+            ),
+        Group::new()
+            .element(Level::NOTE.title("the lint level is defined here"))
+            .element(
+                Snippet::source(source_0)
+                    .origin("$DIR/diagnostic-width.rs")
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(49..67)),
+            ),
+        Group::new()
+            .element(Level::HELP.title("use an automatic link instead"))
+            .element(
+                Snippet::source(source_1)
+                    .origin("$DIR/diagnostic-width.rs")
+                    .line_start(4)
+                    .fold(true)
+                    .patch(Patch::new(40..40, "<"))
+                    .patch(Patch::new(55..55, ">")),
+            ),
+    ];
 
     let expected = str![[r#"
 error: this URL is not a hyperlink
