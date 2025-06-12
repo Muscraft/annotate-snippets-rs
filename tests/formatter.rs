@@ -2643,8 +2643,9 @@ fn main() {
             Group::new()
                 .element(
                     Level::HELP
-                        .text(Some("suggestion[S0123]"))
-                        .title("use `break` on its own without a value inside this `while` loop"),
+                        .text(Some("suggestion"))
+                        .title("use `break` on its own without a value inside this `while` loop")
+                        .id("S0123"),
                 )
                 .element(
                     Snippet::source(source)
