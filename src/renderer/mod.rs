@@ -269,7 +269,7 @@ impl Renderer {
                 let mut max_depth = 0;
                 for e in &group.elements {
                     if let Element::Cause(cause) = e {
-                        let source_map = SourceMap::new(cause.source, cause.line_start);
+                        let source_map = SourceMap::new(&cause.source, cause.line_start);
                         let (depth, annotated_lines) =
                             source_map.annotated_lines(cause.markers.clone(), cause.fold);
                         max_depth = max(max_depth, depth);
@@ -340,7 +340,7 @@ impl Renderer {
                         }
                         Element::Suggestion(suggestion) => {
                             let source_map =
-                                SourceMap::new(suggestion.source, suggestion.line_start);
+                                SourceMap::new(&suggestion.source, suggestion.line_start);
                             self.emit_suggestion_default(
                                 &mut buffer,
                                 suggestion,
@@ -426,10 +426,10 @@ impl Renderer {
             let labels_inner = cause
                 .markers
                 .iter()
-                .filter_map(|ann| match ann.label {
+                .filter_map(|ann| match &ann.label {
                     Some(msg) if ann.kind.is_primary() => {
                         if !msg.trim().is_empty() {
-                            Some(msg.to_owned())
+                            Some(msg.to_string())
                         } else {
                             None
                         }
@@ -446,7 +446,7 @@ impl Renderer {
                 origin.primary = true;
 
                 if origin.line.is_none() || origin.char_column.is_none() {
-                    let source_map = SourceMap::new(cause.source, cause.line_start);
+                    let source_map = SourceMap::new(&cause.source, cause.line_start);
                     let (_depth, annotated_lines) =
                         source_map.annotated_lines(cause.markers.clone(), cause.fold);
 
@@ -532,7 +532,7 @@ impl Renderer {
         if title.level.name != Some(None) {
             buffer.append(buffer_msg_line_offset, title.level.as_str(), label_style);
             label_width += title.level.as_str().len();
-            if let Some(Id { id: Some(id), url }) = title.id {
+            if let Some(Id { id: Some(id), url }) = &title.id {
                 buffer.append(buffer_msg_line_offset, "[", label_style);
                 if let Some(url) = url.as_ref() {
                     buffer.append(
@@ -576,9 +576,9 @@ impl Renderer {
         });
 
         let (title_str, style) = if title.is_pre_styled {
-            (title.title.to_owned(), ElementStyle::NoStyle)
+            (title.title.to_string(), ElementStyle::NoStyle)
         } else {
-            (normalize_whitespace(title.title), title_element_style)
+            (normalize_whitespace(&title.title), title_element_style)
         };
         for (i, text) in title_str.lines().enumerate() {
             if i != 0 {
@@ -655,7 +655,7 @@ impl Renderer {
                 format!("{}:{}:{}", origin.origin, line, col)
             }
             (Some(line), None) => format!("{}:{}", origin.origin, line),
-            _ => origin.origin.to_owned(),
+            _ => origin.origin.to_string(),
         };
 
         buffer.append(buffer_msg_line_offset, &str, ElementStyle::LineAndColumn);
@@ -1405,7 +1405,7 @@ impl Renderer {
             } else {
                 (pos + 2, annotation.start.display.saturating_sub(left))
             };
-            if let Some(label) = annotation.label {
+            if let Some(label) = &annotation.label {
                 buffer.puts(line_offset + pos, code_offset + col, label, style);
             }
         }
@@ -1800,7 +1800,7 @@ impl Renderer {
                     // ...or trailing spaces. Account for substitutions containing unicode
                     // characters.
                     let sub_len: usize = str_width(if is_whitespace_addition {
-                        part.replacement
+                        &part.replacement
                     } else {
                         part.replacement.trim()
                     });
@@ -1821,7 +1821,7 @@ impl Renderer {
                     let padding: usize = max_line_num_len + 3;
                     for p in underline_start..underline_end {
                         if matches!(show_code_change, DisplaySuggestion::Underline)
-                            && is_different(sm, part.replacement, part.span.clone())
+                            && is_different(sm, &part.replacement, part.span.clone())
                         {
                             // If this is a replacement, underline with `~`, if this is an addition
                             // underline with `+`.
@@ -1922,7 +1922,7 @@ impl Renderer {
                     }
 
                     // length of the code after substitution
-                    let full_sub_len = str_width(part.replacement) as isize;
+                    let full_sub_len = str_width(&part.replacement) as isize;
 
                     // length of the code to be substituted
                     let snippet_len = span_end_pos as isize - span_start_pos as isize;
@@ -2650,7 +2650,7 @@ pub(crate) struct LineAnnotation<'a> {
     pub kind: AnnotationKind,
 
     /// Optional label to display adjacent to the annotation.
-    pub label: Option<&'a str>,
+    pub label: Option<Cow<'a, str>>,
 
     /// Is this a single line, multiline or multiline span minimized down to a
     /// smaller span.
@@ -2677,7 +2677,7 @@ impl LineAnnotation<'_> {
     }
 
     pub(crate) fn has_label(&self) -> bool {
-        if let Some(label) = self.label {
+        if let Some(label) = &self.label {
             // Consider labels with no text as effectively not being there
             // to avoid weird output with unnecessary vertical lines, like:
             //

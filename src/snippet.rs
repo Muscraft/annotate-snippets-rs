@@ -2,6 +2,7 @@
 
 use crate::renderer::source_map::SourceMap;
 use crate::Level;
+use std::borrow::Cow;
 use std::ops::Range;
 
 pub(crate) const ERROR_TXT: &str = "error";
@@ -12,8 +13,8 @@ pub(crate) const WARNING_TXT: &str = "warning";
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Id<'a> {
-    pub(crate) id: Option<&'a str>,
-    pub(crate) url: Option<&'a str>,
+    pub(crate) id: Option<Cow<'a, str>>,
+    pub(crate) url: Option<Cow<'a, str>>,
 }
 
 /// An [`Element`] container
@@ -100,7 +101,7 @@ pub struct Padding;
 pub struct Title<'a> {
     pub(crate) level: Level<'a>,
     pub(crate) id: Option<Id<'a>>,
-    pub(crate) title: &'a str,
+    pub(crate) title: Cow<'a, str>,
     pub(crate) is_pre_styled: bool,
 }
 
@@ -117,8 +118,8 @@ impl<'a> Title<'a> {
     /// not allowed to be passed to this function.
     ///
     /// </div>
-    pub fn id(mut self, id: &'a str) -> Self {
-        self.id.get_or_insert(Id::default()).id = Some(id);
+    pub fn id(mut self, id: impl Into<Cow<'a, str>>) -> Self {
+        self.id.get_or_insert(Id::default()).id = Some(id.into());
         self
     }
 
@@ -128,8 +129,8 @@ impl<'a> Title<'a> {
     /// `id` present
     ///
     /// </div>
-    pub fn id_url(mut self, url: &'a str) -> Self {
-        self.id.get_or_insert(Id::default()).url = Some(url);
+    pub fn id_url(mut self, url: impl Into<Cow<'a, str>>) -> Self {
+        self.id.get_or_insert(Id::default()).url = Some(url.into());
         self
     }
 }
@@ -139,7 +140,7 @@ impl<'a> Title<'a> {
 pub struct Snippet<'a, T> {
     pub(crate) origin: Option<Origin<'a>>,
     pub(crate) line_start: usize,
-    pub(crate) source: &'a str,
+    pub(crate) source: Cow<'a, str>,
     pub(crate) markers: Vec<T>,
     pub(crate) fold: bool,
 }
@@ -154,11 +155,11 @@ impl<'a, T: Clone> Snippet<'a, T> {
     /// not allowed to be passed to this function.
     ///
     /// </div>
-    pub fn source(source: &'a str) -> Self {
+    pub fn source(source: impl Into<Cow<'a, str>>) -> Self {
         Self {
             origin: None,
             line_start: 1,
-            source,
+            source: source.into(),
             markers: vec![],
             fold: false,
         }
@@ -231,7 +232,7 @@ impl<'a> Snippet<'a, Patch<'a>> {
 #[derive(Clone, Debug)]
 pub struct Annotation<'a> {
     pub(crate) span: Range<usize>,
-    pub(crate) label: Option<&'a str>,
+    pub(crate) label: Option<Cow<'a, str>>,
     pub(crate) kind: AnnotationKind,
     pub(crate) highlight_source: bool,
 }
@@ -248,8 +249,8 @@ impl<'a> Annotation<'a> {
     /// not allowed to be passed to this function.
     ///
     /// </div>
-    pub fn label(mut self, label: &'a str) -> Self {
-        self.label = Some(label);
+    pub fn label(mut self, label: impl Into<OptionCow<'a>>) -> Self {
+        self.label = label.into().0;
         self
     }
 
@@ -288,7 +289,7 @@ impl AnnotationKind {
 #[derive(Clone, Debug)]
 pub struct Patch<'a> {
     pub(crate) span: Range<usize>,
-    pub(crate) replacement: &'a str,
+    pub(crate) replacement: Cow<'a, str>,
 }
 
 impl<'a> Patch<'a> {
@@ -301,8 +302,11 @@ impl<'a> Patch<'a> {
     /// not allowed to be passed to this function.
     ///
     /// </div>
-    pub fn new(span: Range<usize>, replacement: &'a str) -> Self {
-        Self { span, replacement }
+    pub fn new(span: Range<usize>, replacement: impl Into<Cow<'a, str>>) -> Self {
+        Self {
+            span,
+            replacement: replacement.into(),
+        }
     }
 
     pub(crate) fn is_addition(&self, sm: &SourceMap<'_>) -> bool {
@@ -346,9 +350,9 @@ impl<'a> Patch<'a> {
             return;
         };
 
-        if let Some((prefix, substr, suffix)) = as_substr(snippet, self.replacement) {
+        if let Some((prefix, substr, suffix)) = as_substr(snippet, &self.replacement) {
             self.span = self.span.start + prefix..self.span.end.saturating_sub(suffix);
-            self.replacement = substr;
+            self.replacement = Cow::Owned(substr.to_owned());
         }
     }
 }
@@ -364,7 +368,7 @@ impl<'a> Patch<'a> {
 /// is the first one in a [`Group`], in which case it is ignored.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Origin<'a> {
-    pub(crate) origin: &'a str,
+    pub(crate) origin: Cow<'a, str>,
     pub(crate) line: Option<usize>,
     pub(crate) char_column: Option<usize>,
     pub(crate) primary: bool,
@@ -378,9 +382,9 @@ impl<'a> Origin<'a> {
     /// not allowed to be passed to this function.
     ///
     /// </div>
-    pub fn new(origin: &'a str) -> Self {
+    pub fn new(origin: impl Into<Cow<'a, str>>) -> Self {
         Self {
-            origin,
+            origin: origin.into(),
             line: None,
             char_column: None,
             primary: false,
@@ -431,6 +435,38 @@ impl<'a> From<&'a str> for Origin<'a> {
 impl<'a> From<&'a String> for Origin<'a> {
     fn from(origin: &'a String) -> Self {
         Self::new(origin)
+    }
+}
+
+impl<'a> From<Cow<'a, str>> for Origin<'a> {
+    fn from(origin: Cow<'a, str>) -> Self {
+        Self::new(origin)
+    }
+}
+
+#[derive(Debug)]
+pub struct OptionCow<'a>(Option<Cow<'a, str>>);
+
+impl<'a, T: Into<Cow<'a, str>>> From<Option<T>> for OptionCow<'a> {
+    fn from(value: Option<T>) -> Self {
+        Self(value.map(Into::into))
+    }
+}
+
+impl<'a> From<&'a str> for OptionCow<'a> {
+    fn from(value: &'a str) -> Self {
+        Self(Some(Cow::Borrowed(value)))
+    }
+}
+impl<'a> From<String> for OptionCow<'a> {
+    fn from(value: String) -> Self {
+        Self(Some(Cow::Owned(value)))
+    }
+}
+
+impl<'a> From<&'a String> for OptionCow<'a> {
+    fn from(value: &'a String) -> Self {
+        Self(Some(Cow::Borrowed(value.as_str())))
     }
 }
 

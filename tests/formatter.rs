@@ -2449,7 +2449,7 @@ fn secondary_title_no_level_text() {
         )
         .element(
             Level::NOTE
-                .text(None)
+                .text(None::<&str>)
                 .title("expected reference `&str`\n   found reference `&'static [u8; 0]`"),
         )];
 
