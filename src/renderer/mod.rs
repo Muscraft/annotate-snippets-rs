@@ -259,8 +259,8 @@ impl Renderer {
                 }
                 let level = group
                     .elements
-                    .iter()
-                    .find_map(|s| match &s {
+                    .first()
+                    .and_then(|s| match &s {
                         Element::Title(title) => Some(title.level.clone()),
                         _ => None,
                     })
@@ -881,11 +881,7 @@ impl Renderer {
                                         last_buffer_line_num,
                                         width_offset,
                                         pos,
-                                        if ann.is_primary() {
-                                            ElementStyle::UnderlinePrimary
-                                        } else {
-                                            ElementStyle::UnderlineSecondary
-                                        },
+                                        ann.style(false),
                                     );
                                 }
                             }
@@ -928,11 +924,7 @@ impl Renderer {
                                         last_buffer_line_num,
                                         width_offset,
                                         pos,
-                                        if ann.is_primary() {
-                                            ElementStyle::UnderlinePrimary
-                                        } else {
-                                            ElementStyle::UnderlineSecondary
-                                        },
+                                        ann.style(false),
                                     );
                                 }
                             }
@@ -1016,7 +1008,7 @@ impl Renderer {
                     .take(ann.start.display)
                     .all(char::is_whitespace)
                 {
-                    let uline = self.underline(ann.is_primary());
+                    let uline = self.underline(ann);
                     let chr = uline.multiline_whole_line;
                     annotations.push((depth, uline.style));
                     buffer_ops.push((line_offset, width_offset + depth - 1, chr, uline.style));
@@ -1267,7 +1259,7 @@ impl Renderer {
         // 4 |   }
         //   |  _
         for &(pos, annotation) in &annotations_position {
-            let underline = self.underline(annotation.is_primary());
+            let underline = self.underline(annotation);
             let pos = pos + 1;
             match annotation.annotation_type {
                 LineAnnotationType::MultilineStart(depth)
@@ -1306,7 +1298,7 @@ impl Renderer {
         // 4 | | }
         //   | |_
         for &(pos, annotation) in &annotations_position {
-            let underline = self.underline(annotation.is_primary());
+            let underline = self.underline(annotation);
             let pos = pos + 1;
 
             if pos > 1 && (annotation.has_label() || annotation.takes_space()) {
@@ -1391,11 +1383,7 @@ impl Renderer {
         // 4 |   }
         //   |  _  test
         for &(pos, annotation) in &annotations_position {
-            let style = if annotation.is_primary() {
-                ElementStyle::LabelPrimary
-            } else {
-                ElementStyle::LabelSecondary
-            };
+            let style = annotation.style(true);
             let (pos, col) = if pos == 0 {
                 if annotation.end.display == 0 {
                     (pos + 1, (annotation.end.display + 2).saturating_sub(left))
@@ -1435,7 +1423,7 @@ impl Renderer {
         // 4 |   }
         //   |  _^  test
         for &(pos, annotation) in &annotations_position {
-            let uline = self.underline(annotation.is_primary());
+            let uline = self.underline(annotation);
             for p in annotation.start.display..annotation.end.display {
                 // The default span label underline.
                 buffer.putc(
@@ -2443,7 +2431,7 @@ impl Renderer {
         }
     }
 
-    fn underline(&self, is_primary: bool) -> UnderlineParts {
+    fn underline(&self, line_annotation: &LineAnnotation<'_>) -> UnderlineParts {
         //               X0 Y0
         // label_start > ┯━━━━ < underline
         //               │ < vertical_text_line
@@ -2468,9 +2456,9 @@ impl Renderer {
         //                        ┃  ╿ < multiline_end_up
         //                        ┗━━┛ < bottom_right
 
-        match (self.theme, is_primary) {
+        match (self.theme, line_annotation.is_primary()) {
             (OutputTheme::Ascii, true) => UnderlineParts {
-                style: ElementStyle::UnderlinePrimary,
+                style: line_annotation.style(false),
                 underline: '^',
                 label_start: '^',
                 vertical_text_line: '|',
@@ -2487,7 +2475,7 @@ impl Renderer {
                 multiline_bottom_right_with_text: '|',
             },
             (OutputTheme::Ascii, false) => UnderlineParts {
-                style: ElementStyle::UnderlineSecondary,
+                style: line_annotation.style(false),
                 underline: '-',
                 label_start: '-',
                 vertical_text_line: '|',
@@ -2504,7 +2492,7 @@ impl Renderer {
                 multiline_bottom_right_with_text: '|',
             },
             (OutputTheme::Unicode, true) => UnderlineParts {
-                style: ElementStyle::UnderlinePrimary,
+                style: line_annotation.style(false),
                 underline: '━',
                 label_start: '┯',
                 vertical_text_line: '│',
@@ -2521,7 +2509,7 @@ impl Renderer {
                 multiline_bottom_right_with_text: '┥',
             },
             (OutputTheme::Unicode, false) => UnderlineParts {
-                style: ElementStyle::UnderlineSecondary,
+                style: line_annotation.style(false),
                 underline: '─',
                 label_start: '┬',
                 vertical_text_line: '│',
@@ -2658,6 +2646,8 @@ pub(crate) struct LineAnnotation<'a> {
 
     /// Whether the source code should be highlighted
     pub highlight_source: bool,
+
+    pub level: Option<Level<'a>>,
 }
 
 impl LineAnnotation<'_> {
@@ -2700,6 +2690,26 @@ impl LineAnnotation<'_> {
             self.annotation_type,
             LineAnnotationType::MultilineStart(_) | LineAnnotationType::MultilineEnd(_)
         )
+    }
+
+    pub(crate) fn style(&self, is_label: bool) -> ElementStyle {
+        match (&self.level, self.kind) {
+            (Some(level), _) => ElementStyle::Level(level.level),
+            (None, AnnotationKind::Primary) => {
+                if is_label {
+                    ElementStyle::LabelPrimary
+                } else {
+                    ElementStyle::UnderlinePrimary
+                }
+            }
+            (None, AnnotationKind::Context) => {
+                if is_label {
+                    ElementStyle::LabelSecondary
+                } else {
+                    ElementStyle::UnderlineSecondary
+                }
+            }
+        }
     }
 }
 

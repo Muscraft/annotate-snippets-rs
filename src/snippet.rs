@@ -235,6 +235,7 @@ pub struct Annotation<'a> {
     pub(crate) label: Option<Cow<'a, str>>,
     pub(crate) kind: AnnotationKind,
     pub(crate) highlight_source: bool,
+    pub(crate) level: Option<Level<'a>>,
 }
 
 impl<'a> Annotation<'a> {
@@ -259,6 +260,11 @@ impl<'a> Annotation<'a> {
         self.highlight_source = highlight_source;
         self
     }
+
+    pub fn level(mut self, level: Level<'a>) -> Self {
+        self.level = Some(level);
+        self
+    }
 }
 
 /// The category of the [`Annotation`]
@@ -277,6 +283,7 @@ impl AnnotationKind {
             label: None,
             kind: self,
             highlight_source: false,
+            level: None,
         }
     }
 

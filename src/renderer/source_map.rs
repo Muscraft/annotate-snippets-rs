@@ -1,5 +1,5 @@
 use crate::renderer::{char_width, is_different, num_overlap, LineAnnotation, LineAnnotationType};
-use crate::{Annotation, AnnotationKind, Patch};
+use crate::{Annotation, AnnotationKind, Level, Patch};
 use std::borrow::Cow;
 use std::cmp::{max, min};
 use std::ops::Range;
@@ -166,6 +166,7 @@ impl<'a> SourceMap<'a> {
             label,
             kind,
             highlight_source,
+            level,
         } in annotations
         {
             let (lo, mut hi) = self.span_to_locations(span.clone());
@@ -188,6 +189,7 @@ impl<'a> SourceMap<'a> {
                     label,
                     annotation_type: LineAnnotationType::Singleline,
                     highlight_source,
+                    level,
                 };
                 self.add_annotation_to_file(&mut annotated_line_infos, lo.line, line_ann);
             } else {
@@ -199,6 +201,7 @@ impl<'a> SourceMap<'a> {
                     label,
                     overlaps_exactly: false,
                     highlight_source,
+                    level,
                 });
             }
         }
@@ -518,6 +521,7 @@ pub(crate) struct MultilineAnnotation<'a> {
     pub label: Option<Cow<'a, str>>,
     pub overlaps_exactly: bool,
     pub highlight_source: bool,
+    pub level: Option<Level<'a>>,
 }
 
 impl<'a> MultilineAnnotation<'a> {
@@ -543,6 +547,7 @@ impl<'a> MultilineAnnotation<'a> {
             label: None,
             annotation_type: LineAnnotationType::MultilineStart(self.depth),
             highlight_source: self.highlight_source,
+            level: self.level.clone(),
         }
     }
 
@@ -559,6 +564,7 @@ impl<'a> MultilineAnnotation<'a> {
             label: self.label.clone(),
             annotation_type: LineAnnotationType::MultilineEnd(self.depth),
             highlight_source: self.highlight_source,
+            level: self.level.clone(),
         }
     }
 
@@ -570,6 +576,7 @@ impl<'a> MultilineAnnotation<'a> {
             label: None,
             annotation_type: LineAnnotationType::MultilineLine(self.depth),
             highlight_source: self.highlight_source,
+            level: self.level.clone(),
         }
     }
 }
