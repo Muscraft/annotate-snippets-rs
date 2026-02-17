@@ -2295,7 +2295,7 @@ fn draw_line_separator(renderer: &Renderer, buffer: &mut StyledBuffer, line: usi
     buffer.puts(line, column, dots, ElementStyle::LineNumber);
 }
 
-trait MessageOrTitle {
+pub(crate) trait MessageOrTitle {
     fn level(&self) -> &Level<'_>;
     fn id(&self) -> Option<&Id<'_>>;
     fn text(&self) -> &str;
@@ -2366,7 +2366,7 @@ fn num_decimal_digits(num: Option<usize>) -> usize {
     MAX_DIGITS
 }
 
-fn str_width(s: &str) -> usize {
+pub(crate) fn str_width(s: &str) -> usize {
     s.chars().map(char_width).sum()
 }
 
