@@ -2225,7 +2225,7 @@ fn draw_line_separator(renderer: &Renderer, buffer: &mut StyledBuffer, line: usi
     buffer.puts(line, column, dots, ElementStyle::LineNumber);
 }
 
-trait MessageOrTitle {
+pub(crate) trait MessageOrTitle {
     fn level(&self) -> &Level<'_>;
     fn id(&self) -> Option<&Id<'_>>;
     fn text(&self) -> &str;
