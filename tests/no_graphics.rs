@@ -729,8 +729,7 @@ help: rename one of these
     let expected_no_graphics = str![[r#"
 help: rename one of these
  on line 1, column 4 replace with: a
-  b
-
+ on line 1, column 4 replace with: b
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);

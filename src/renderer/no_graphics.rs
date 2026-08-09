@@ -323,7 +323,9 @@ pub(crate) fn render_no_graphics(
                         writeln!(output)?;
                     }
                 }
-                PreprocessedElement::Padding(_) => {}
+                PreprocessedElement::Padding(_) => {
+                    last_suggestion_path = None;
+                }
             }
         }
 
