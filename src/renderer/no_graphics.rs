@@ -175,8 +175,7 @@ pub(crate) fn render_no_graphics(
                             }
                         } else {
                             let col = if let Some(line) = sm.get_line(lo.line)
-                                && let Some(pre) = line.get(..lo.char)
-                                && pre.chars().all(|c| c.is_whitespace())
+                                && line.chars().take(lo.char).all(|c| c.is_whitespace())
                             {
                                 // Everything before the span is whitespace, mentioning the column
                                 // doesn't add information.
