@@ -3992,7 +3992,7 @@ fn test_format_no_severity() {
     let renderer = renderer.decor_style(DecorStyle::Unicode);
     assert_data_eq!(renderer.render(input), expected_unicode);
 
-    let expected_no_graphics = str!["This is a title"];
+    let expected_no_graphics = str!["E0001: This is a title"];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
 }

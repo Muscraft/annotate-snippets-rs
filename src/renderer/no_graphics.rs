@@ -371,26 +371,36 @@ fn render_title(
     let mut label_width = 0;
     let st = style.color_spec(title.level(), stylesheet);
 
-    if title.level().name != Some(None) {
-        // error EXXXX: message
-        // ^^^^^
-        write!(
-            buffer,
-            "{}{}{0:#}",
-            ElementStyle::Level(title.level().level).color_spec(&crate::Level::NOTE, stylesheet),
-            title.level().as_str(),
-        )?;
-        label_width += str_width(title.level().as_str());
+    let level_is_visible = title.level().name != Some(None);
+    if level_is_visible || title.id().is_some() {
+        if level_is_visible {
+            // error EXXXX: message
+            // ^^^^^
+            write!(
+                buffer,
+                "{}{}{0:#}",
+                ElementStyle::Level(title.level().level)
+                    .color_spec(&crate::Level::NOTE, stylesheet),
+                title.level().as_str(),
+            )?;
+            label_width += str_width(title.level().as_str());
+        }
 
         if let Some(Id {
             id: Some(id),
             url: _,
         }) = &title.id()
         {
+            if level_is_visible {
+                // error EXXXX: message
+                //      ^
+                write!(buffer, " ")?;
+                label_width += 1;
+            }
             // error EXXXX: message
             //       ^^^^^
-            write!(buffer, "{st:#} {id}",)?;
-            label_width += 1 + str_width(id);
+            write!(buffer, "{id}")?;
+            label_width += str_width(id);
         }
         // error EXXXX: message
         //            ^
