@@ -685,7 +685,8 @@ help: consider importing this struct
 
     let expected_no_graphics = str![[r#"
 help: consider importing this struct
- on line 1, column 9 add: slice::note: a note after the suggestion
+ on line 1, column 9 add: slice::
+note: a note after the suggestion
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -727,7 +728,8 @@ help: rename one of these
 
     let expected_no_graphics = str![[r#"
 help: rename one of these
- on line 1, column 4 replace with: a  b
+ on line 1, column 4 replace with: a
+  b
 
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);

@@ -300,6 +300,12 @@ pub(crate) fn render_no_graphics(
                     } else if !replacement.trim().is_empty() {
                         // Single addition suggestion
                         write!(output, "{st}{replacement}{st:#}")?;
+
+                        if peek.is_some() {
+                            writeln!(output)?;
+                        }
+                    } else if peek.is_some() {
+                        writeln!(output)?;
                     }
 
                     last_suggestion_path = Some(suggestion.path.as_ref());
