@@ -1,10 +1,11 @@
+use alloc::borrow::Cow;
 use alloc::{string::String, vec::Vec};
 use core::cmp::Reverse;
 use core::fmt::{self, Write};
 
 use super::graphics::{MessageOrTitle, str_width};
 use super::preprocess::{Preprocessed, PreprocessedElement, PreprocessedGroup};
-use super::{ElementStyle, Stylesheet};
+use super::{ElementStyle, Stylesheet, normalize_whitespace};
 use crate::{Id, Renderer, Report};
 
 /// Print out a file position optimized for the data available.
@@ -400,7 +401,11 @@ fn render_title(
 
     // error EXXXX: message
     //              ^^^^^^^
-    let title_str = title.text();
+    let title_str = if title.allows_styling() {
+        Cow::Borrowed(title.text())
+    } else {
+        normalize_whitespace(title.text())
+    };
     for (i, text) in title_str.split('\n').enumerate() {
         if i != 0 {
             write!(buffer, "\n{padding}")?;

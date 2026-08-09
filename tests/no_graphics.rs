@@ -815,7 +815,7 @@ error: tab    here
     assert_data_eq!(renderer_ascii.render(report), expected_ascii);
 
     let expected_no_graphics = str![[r#"
-error: tab	here
+error: tab    here
  at file.rs:1:5: label	with tab
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
