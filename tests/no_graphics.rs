@@ -152,7 +152,7 @@ error E0599: no method named `with_bar` found for struct `PartialTest<true, true
 note: the method was found for
       - `PartialTest<foo_bitfield, false>`
 help: one of the expressions' fields has a method of the same name
- on line 15, column 44 add: value.
+ on line 15, column 45 add: value.
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -451,7 +451,7 @@ LL +     () => {{  }}
 error: foo
  at $DIR/foo.rs:3:5
 help: consider removing this
- at $DIR/macro.rs:3:13
+ at $DIR/macro.rs:3:14
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -496,7 +496,7 @@ help: convert both operands
 error: mismatched types
  at file.rs:1:5: expected `u8`
 help: convert both operands
- on line 1, column 4 replace with: u8::from(value)
+ on line 1, column 5 replace with: u8::from(value)
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -654,7 +654,7 @@ help: convert it
 error: mismatched types
  at file.rs:1:6: expected `u8`
 help: convert it
- on line 1, column 5 replace with: arg.into()
+ on line 1, column 6 replace with: arg.into()
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -685,7 +685,7 @@ help: consider importing this struct
 
     let expected_no_graphics = str![[r#"
 help: consider importing this struct
- on line 1, column 8 add: slice::note: a note after the suggestion
+ on line 1, column 9 add: slice::note: a note after the suggestion
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -727,7 +727,7 @@ help: rename one of these
 
     let expected_no_graphics = str![[r#"
 help: rename one of these
- on line 1, column 3 replace with: a  b
+ on line 1, column 4 replace with: a  b
 
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);

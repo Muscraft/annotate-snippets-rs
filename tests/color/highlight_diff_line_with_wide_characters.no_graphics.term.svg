@@ -28,7 +28,7 @@
 </tspan>
     <tspan x="10px" y="82px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: a struct with a similar name exists: `啊啊啊啊`</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan> on line 3, column 17 replace with: </tspan><tspan class="fg-bright-green">啊啊啊啊</tspan>
+    <tspan x="10px" y="100px"><tspan> on line 3, column 18 replace with: </tspan><tspan class="fg-bright-green">啊啊啊啊</tspan>
 </tspan>
   </text>
 

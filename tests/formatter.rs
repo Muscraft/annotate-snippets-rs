@@ -2015,7 +2015,7 @@ help: you might have meant to use one of the following enum variants
 error E0423: expected value, found enum `A`
  on line 1
 help: you might have meant to use one of the following enum variants
- on line 1, column 4 replace with one of:
+ on line 1, column 5 replace with one of:
   (A::Tuple())
   A::Unit
 
@@ -2184,7 +2184,7 @@ help: make these changes and things will work
 error E0423: expected value, found enum `A`
  on line 1
 help: make these changes and things will work
- on line 1, column 4 replace with: (A::Tuple())
+ on line 1, column 5 replace with: (A::Tuple())
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2245,7 +2245,7 @@ help: make these changes and things will work
 error E0423: Found `ThisIsVeryLong`
  on line 1
 help: make these changes and things will work
- on line 1, column 4 replace with: (A::Tuple())
+ on line 1, column 5 replace with: (A::Tuple())
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2357,7 +2357,7 @@ error E0502: cannot borrow `*self` as mutable because it is also borrowed as imm
   on line 5: mutable borrow occurs here
   on line 6: immutable borrow later used here
 help: try explicitly pass `&Self` into the Closure as an argument
- on line 2, column 13 add: this: &Self
+ on line 2, column 14 add: this: &Self
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2560,11 +2560,11 @@ help: if you import `cell`, refer to it directly
 error E0433: failed to resolve: use of undeclared crate or module `st`
  on line 13, column 10: use of undeclared crate or module `st`
 help: there is a crate or module with a similar name
- on line 13, column 9 replace with: std
+ on line 13, column 10 replace with: std
 help: consider importing this module
  on line 2, column 1 add: use std::cell;
 help: if you import `cell`, refer to it directly
- on line 13, column 9
+ on line 13, column 10
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2817,7 +2817,7 @@ help: you could relax the implicit `Sized` bound on `T` if it were used through 
  at $DIR/removal-of-multiline-trait-bound-in-where-clause.rs:2:16: this could be changed to `T: ?Sized`...
   on line 2, column 19: ...if indirection were used here: `Box<T>`
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
- on line 6, column 4
+ on line 6, column 5
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2894,7 +2894,7 @@ help: consider removing the `?Sized` bound to make the type parameter `Sized`
     let expected_no_graphics = str![[r#"
 error E0277: the size for values of type `T` cannot be known at compilation time
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
- on line 8, column 2
+ on line 8, column 3
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3895,7 +3895,7 @@ error E0369: cannot add `&str` to `&str`
   on line 7, column 262: &str
 note: string concatenation requires an owned `String` on the left
 help: create an owned `String` from a string reference
- on line 7, column 258 add: .to_owned()
+ on line 7, column 259 add: .to_owned()
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4287,7 +4287,7 @@ error E0571: `break` with value from a `while` loop
  at $DIR/issue-114529-illegal-break-with-value.rs:22:9 to 24:11: can only break with a value inside `loop` or breakable block
   on line 21: you can't `break` with a value in a `while` loop
 suggestion S0123: use `break` on its own without a value inside this `while` loop
- on line 22, column 8 replace with: break
+ on line 22, column 9 replace with: break
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4486,9 +4486,9 @@ warning: this changes meaning in Rust 2021
 note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
 note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 5, column 10 replace with: iter
+ on line 5, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
- on line 5, column 44 add:  // Span after line end
+ on line 5, column 45 add:  // Span after line end
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4592,9 +4592,9 @@ warning: this changes meaning in Rust 2021
 note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
 note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 3, column 10 replace with: iter
+ on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
- on line 3, column 45 add:  // Span after line end
+ on line 3, column 46 add:  // Span after line end
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4698,9 +4698,9 @@ warning: this changes meaning in Rust 2021
 note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
 note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 3, column 10 replace with: iter
+ on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
- on line 3, column 45 replace with:  // Span after line end
+ on line 3, column 46 replace with:  // Span after line end
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4983,7 +4983,7 @@ help: consider specifying the generic argument
 error E0282: type annotations needed
  at $DIR/issue-42234-unknown-receiver-type.rs:12:10: cannot infer type of the type parameter `S` declared on the method `sum`
 help: consider specifying the generic argument
- on line 23, column 12 replace with: ::<GENERIC_ARG>
+ on line 23, column 13 replace with: ::<GENERIC_ARG>
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5064,7 +5064,7 @@ help: consider specifying the generic argument
 error E0282: type annotations needed
  at $DIR/issue-42234-unknown-receiver-type.rs:12:10: cannot infer type of the type parameter `S` declared on the method `sum`
 help: consider specifying the generic argument
- on line 23, column 12 replace with: ::<_>
+ on line 23, column 13 replace with: ::<_>
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5574,7 +5574,7 @@ error E0061: this function takes 6 arguments but 5 arguments were supplied
 note: function defined here
  at $DIR/trimmed_multiline_suggestion.rs:1:4
 help: provide the argument
- on line 5, column 35 replace with: (
+ on line 5, column 36 replace with: (
         variable_name,
         /* char */,
         variable_name,
@@ -5696,7 +5696,7 @@ error: consider adding a `;` to the last statement for consistent formatting
 note: the lint level is defined here
  at tests/ui/semicolon_if_nothing_returned_testing.rs:2:9
 help: add a `;` here
- on line 4, column 4 replace with: nums.iter().for_each(|x| {
+ on line 4, column 5 replace with: nums.iter().for_each(|x| {
         if *x > 0 {
             println!("Positive number");
         } else {
@@ -5813,7 +5813,7 @@ error E0061: this function takes 6 arguments but 5 arguments were supplied
  at $DIR/trimmed_multiline_suggestion.rs:3:5
   on line 5: argument #2 of type `char` is missing
 help: provide the argument
- on line 3, column 35 replace with: (
+ on line 3, column 36 replace with: (
         variable_name,
         /* char */,
         variable_name,
@@ -5985,7 +5985,7 @@ help: consider importing this module instead
     let expected_no_graphics = str![[r#"
  at /tmp/test.rs:1:5: no `sync` in the root
 help: consider importing this module instead
- on line 1, column 4 replace with: std::sync
+ on line 1, column 5 replace with: std::sync
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);

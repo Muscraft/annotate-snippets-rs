@@ -34,7 +34,7 @@
 </tspan>
     <tspan x="10px" y="136px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: consider removing this method call, as the receiver has type `std::vec::IntoIter&lt;HashSet&lt;u8&gt;&gt;` and `std::vec::IntoIter&lt;HashSet&lt;u8&gt;&gt;: Iterator` trivially holds</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan> on line 15, column 17</tspan>
+    <tspan x="10px" y="154px"><tspan> on line 15, column 18</tspan>
 </tspan>
   </text>
 

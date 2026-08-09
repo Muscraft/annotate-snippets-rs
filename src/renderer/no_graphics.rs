@@ -243,7 +243,7 @@ pub(crate) fn render_no_graphics(
                             // column.
                             None
                         } else {
-                            Some(lo.char.max(1))
+                            Some(lo.char + 1)
                         };
                         let path: Option<&str> = match (&suggestion.path, report_primary_path) {
                             (Some(path), Some(primary)) if path != primary => {

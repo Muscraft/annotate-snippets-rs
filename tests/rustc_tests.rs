@@ -2876,7 +2876,7 @@ error: `Iterator::map` call that discard the iterator's values
   on line 11, column 22 to line 14, column 6: called `Iterator::map` with callable that returns `()`
 note: `Iterator::map`, like many of the methods on `Iterator`, gets executed lazily, meaning that its effects won't be visible until it is iterated
 help: you might have meant to use `Iterator::for_each`
- on line 11, column 17 replace with: for_each
+ on line 11, column 18 replace with: for_each
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2964,7 +2964,7 @@ help: escape the character
 error: character constant must be escaped: `/n`
  at $DIR/bad-char-literals.rs:10:6 to 11:1
 help: escape the character
- on line 10, column 5 add: /n
+ on line 10, column 6 add: /n
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3545,9 +3545,9 @@ error E0532: expected unit struct, unit variant or constant, found tuple variant
  at $DIR/auxiliary/declarations-for-tuple-field-count-errors.rs:11:15: similarly named unit variant `Z0` defined here
   on line 11, column 19: `E1::Z1` defined here
 help: use the tuple variant pattern syntax instead
- on line 35, column 8 replace with: E1::Z1()
+ on line 35, column 9 replace with: E1::Z1()
 help: a unit variant with a similar name exists
- on line 35, column 12 replace with: Z0
+ on line 35, column 13 replace with: Z0
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4010,7 +4010,7 @@ note: bare URLs are not automatically turned into clickable links
 note: the lint level is defined here
  at $DIR/diagnostic-width.rs:2:9
 help: use an automatic link instead
- on line 4, column 40 add: <
+ on line 4, column 41 add: <
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4113,7 +4113,7 @@ warning: this changes meaning in Rust 2021
 note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
 note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 3, column 10 replace with: iter
+ on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
  on line 3, column 1 add: IntoIterator::into_iter(
 "#]];
@@ -5293,7 +5293,7 @@ note: `Option<Private>` defined here
 note: not covered
 note: the matched value is of type `Option<Private>`
 help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
- on line 33, column 56 add: ,
+ on line 33, column 57 add: ,
         Some(Private { misc: true, .. }) => todo!()
 "#]];
     let renderer = renderer.no_graphics(true);
@@ -5421,7 +5421,7 @@ note: the trait is not dyn compatible because it uses `Self` as a type parameter
  at $SRC_DIR/core/src/cmp.rs:338:14
 note: the trait is not dyn compatible because it uses `Self` as a type parameter
 help: consider using an opaque type instead
- on line 11, column 32 add: impl 
+ on line 11, column 33 add: impl 
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5838,13 +5838,13 @@ error E0423: expected function, tuple struct or tuple variant, found struct `std
  at $SRC_DIR/std/src/collections/hash/map.rs:242:0
 note: `std::collections::HashMap` defined here
 help: you might have meant to use an associated function to build this type
- on line 17, column 37 replace with one of:
+ on line 17, column 38 replace with one of:
   ::new()
   ::with_capacity(_)
   ::with_hasher(_)
   ::with_capacity_and_hasher(_, _)
 help: consider using the `Default` trait
- on line 17, column 12 add: <
+ on line 17, column 13 add: <
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6047,14 +6047,14 @@ note: constructor is not visible here due to private fields
 note: private field
 note: private field
 help: you might have meant to use an associated function to build this type
- on line 11, column 21 replace with one of:
+ on line 11, column 22 replace with one of:
   ::new(_)
   ::new_uninit()
   ::new_zeroed()
   ::new_in(_, _)
 and 12 other candidates
 help: consider using the `Default` trait
- on line 11, column 18 add: <
+ on line 11, column 19 add: <
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6192,7 +6192,7 @@ error E0599: no method named `bar` found for struct `Thing` in the current scope
  at $DIR/too-many-field-suggestions.rs:25:7: method not found in `Thing`
   on line 1: method `bar` not found for this struct
 help: some of the expressions' fields have a method of the same name
- on line 25, column 6 add one of:
+ on line 25, column 7 add one of:
   a0.
   a1.
   a2.
@@ -6557,7 +6557,7 @@ note: expected type `[22;1;35musize[22;39m`
 note: associated function defined here
  at $SRC_DIR/alloc/src/string.rs:480:11
 help: remove the extra arguments
- on line 4, column 4 replace with: /* usize */
+ on line 4, column 5 replace with: /* usize */
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -6648,7 +6648,7 @@ error: these match arms have identical bodies
   on line 22: the wildcard arm
 help: if this is unintentional make the arms return different values
 help: otherwise remove the non-wildcard arms
- on line 20, column 8
+ on line 20, column 9
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
