@@ -81,7 +81,7 @@ pub(crate) fn render_no_graphics(
     while let Some(PreprocessedGroup {
         group,
         elements,
-        primary_path: _,
+        primary_path,
         max_depth: _,
     }) = iter.next()
     {
@@ -244,17 +244,28 @@ pub(crate) fn render_no_graphics(
                         } else {
                             Some(lo.char + 1)
                         };
-                        let path: Option<&str> = match (&suggestion.path, report_primary_path) {
-                            (Some(path), Some(primary)) if path != primary => {
-                                // We only include the file path when it is different to the
-                                // primary file.
-                                //
-                                // `at $DIR/file.txt:LL:CC: label`
-                                //  ^^^^^^^^^^^^^^^^^
-                                Some(path)
-                            }
-                            _ => None,
-                        };
+
+                        let path: Option<&str> =
+                            match (&suggestion.path, primary_path.or(report_primary_path)) {
+                                (Some(path), Some(primary)) if path != primary => {
+                                    // We only include the file path when it is different to the
+                                    // primary file.
+                                    //
+                                    // `at $DIR/file.txt:LL:CC: label`
+                                    //  ^^^^^^^^^^^^^^^^^
+                                    Some(path)
+                                }
+                                (Some(path), None) => {
+                                    // We only include the file path when it is different to the
+                                    // primary file.
+                                    //
+                                    // `at $DIR/file.txt:LL:CC: label`
+                                    //  ^^^^^^^^^^^^^^^^^
+                                    Some(path)
+                                }
+                                _ => None,
+                            };
+
                         write!(output, " ")?;
                         render_path(&mut output, path, Some(lo.line), col)?;
                         let add = if let Some(snippet) =

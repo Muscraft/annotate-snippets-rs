@@ -685,7 +685,7 @@ help: consider importing this struct
 
     let expected_no_graphics = str![[r#"
 help: consider importing this struct
- on line 1, column 9 add: slice::
+ at file.rs:1:9 add: slice::
 note: a note after the suggestion
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
@@ -728,8 +728,8 @@ help: rename one of these
 
     let expected_no_graphics = str![[r#"
 help: rename one of these
- on line 1, column 4 replace with: a
- on line 1, column 4 replace with: b
+ at file.rs:1:4 replace with: a
+ at file.rs:1:4 replace with: b
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -789,7 +789,7 @@ help: consider importing this struct
 
     let expected_no_graphics = str![[r#"
 help: consider importing this struct
- on line 1, column 1 add: use std::slice::Iter;
+ at b.rs:1:1 add: use std::slice::Iter;
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -881,7 +881,7 @@ help: change either declaration
 
     let expected_no_graphics = str![[r#"
 help: change either declaration
- on line 1 replace with one of:
+ at file.rs:1 replace with one of:
   x
   y
 
@@ -941,7 +941,7 @@ help: replace the suffix
 
     let expected_no_graphics = str![[r#"
 help: replace the suffix
- on line 1 replace with: first
+ at file.rs:1 replace with: first
 second
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
@@ -966,7 +966,7 @@ fn patch_replacement_escapes_terminal_controls() {
     );
 
     let expected_no_graphics =
-        str![[r#""help: change the value\n on line 1 replace with: \u{1b}[2Jvalue""#]].raw();
+        str![[r#""help: change the value\n at file.rs:1 replace with: \u{1b}[2Jvalue""#]].raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(
         format!("{:?}", renderer_no_graphics.render(report)),
@@ -996,7 +996,7 @@ fn alternative_patch_replacement_normalizes_bidi_controls() {
         expected_ascii
     );
 
-    let expected_no_graphics = str![[r#""help: change the value\n on line 1 replace with one of:\n  \u{202e}value\u{202c}\n  other\n""#]].raw();
+    let expected_no_graphics = str![[r#""help: change the value\n at file.rs:1 replace with one of:\n  \u{202e}value\u{202c}\n  other\n""#]].raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(
         format!("{:?}", renderer_no_graphics.render(report)),
