@@ -1,7 +1,7 @@
-use annotate_snippets::{AnnotationKind, Level, Patch, Renderer, Snippet};
+use annotate_snippets::{AnnotationKind, Level, Padding, Patch, Renderer, Snippet};
 
 use annotate_snippets::renderer::DecorStyle;
-use snapbox::{assert_data_eq, str};
+use snapbox::{IntoData, assert_data_eq, str};
 
 #[test]
 fn missing_fields_in_builder() {
@@ -455,4 +455,550 @@ help: consider removing this
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn suggestion_renders_all_patches() {
+    let source = "x = value + 1;\n";
+    let report = &[
+        Level::ERROR.primary_title("mismatched types").element(
+            Snippet::source(source)
+                .path("file.rs")
+                .annotation(AnnotationKind::Primary.span(4..9).label("expected `u8`")),
+        ),
+        Level::HELP
+            .secondary_title("convert both operands")
+            .element(
+                Snippet::source(source)
+                    .path("file.rs")
+                    .patch(Patch::new(4..9, "u8::from(value)"))
+                    .patch(Patch::new(12..13, "1u8")),
+            ),
+    ];
+
+    let expected_ascii = str![[r#"
+error: mismatched types
+ --> file.rs:1:5
+  |
+1 | x = value + 1;
+  |     ^^^^^ expected `u8`
+  |
+help: convert both operands
+  |
+1 - x = value + 1;
+1 + x = u8::from(value) + 1u8;
+  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+error: mismatched types
+ at file.rs:1:5: expected `u8`
+help: convert both operands
+ on line 1, column 4 replace with: u8::from(value)
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn alternative_suggestions_preserve_file_paths() {
+    let source = "fn main() { let x: Iter; }\n";
+    let other = "fn other() {}\n";
+    let report = &[
+        Level::ERROR
+            .primary_title("cannot find type `Iter`")
+            .element(
+                Snippet::source(source).path("a.rs").annotation(
+                    AnnotationKind::Primary
+                        .span(19..23)
+                        .label("not found in this scope"),
+                ),
+            ),
+        Level::HELP
+            .secondary_title("consider importing this struct")
+            .element(
+                Snippet::source(other)
+                    .path("b.rs")
+                    .patch(Patch::new(0..0, "use std::slice::Iter;\n")),
+            )
+            .element(
+                Snippet::source(other)
+                    .path("c.rs")
+                    .patch(Patch::new(0..0, "use std::slice::Iter;\n")),
+            ),
+    ];
+
+    let expected_ascii = str![[r#"
+error: cannot find type `Iter`
+ --> a.rs:1:20
+  |
+1 | fn main() { let x: Iter; }
+  |                    ^^^^ not found in this scope
+  |
+help: consider importing this struct
+ --> b.rs:1:1
+  |
+1 + use std::slice::Iter;
+  |
+ --> c.rs:1:1
+  |
+1 + use std::slice::Iter;
+  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+error: cannot find type `Iter`
+ at a.rs:1:20: not found in this scope
+help: consider importing this struct
+ at b.rs:1:1 add one of:
+  use std::slice::Iter;
+  use std::slice::Iter;
+
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn alternatives_return_to_primary_path() {
+    let source = "value";
+    let report = &[
+        Level::ERROR.primary_title("invalid value").element(
+            Snippet::source(source)
+                .path("a.rs")
+                .annotation(AnnotationKind::Primary.span(0..5)),
+        ),
+        Level::HELP
+            .secondary_title("replace the value")
+            .element(
+                Snippet::source(source)
+                    .path("a.rs")
+                    .patch(Patch::new(0..5, "other")),
+            )
+            .element(
+                Snippet::source(source)
+                    .path("b.rs")
+                    .patch(Patch::new(0..5, "other")),
+            )
+            .element(
+                Snippet::source(source)
+                    .path("b.rs")
+                    .patch(Patch::new(0..5, "other")),
+            )
+            .element(
+                Snippet::source(source)
+                    .path("a.rs")
+                    .patch(Patch::new(0..5, "other")),
+            )
+            .element(
+                Snippet::source(source)
+                    .path("a.rs")
+                    .patch(Patch::new(0..5, "other")),
+            ),
+    ];
+
+    let expected = str![[r#"
+error: invalid value
+ at a.rs:1:1
+help: replace the value
+ on line 1 replace with one of:
+  other
+  other
+  other
+  other
+  other
+
+"#]];
+    for decor_style in [DecorStyle::Ascii, DecorStyle::Unicode] {
+        let renderer = Renderer::plain().decor_style(decor_style).no_graphics(true);
+        assert_data_eq!(renderer.render(report), expected.clone());
+    }
+}
+
+#[test]
+fn suggestion_location_tracks_trimmed_patch() {
+    let source = "call(arg);\n";
+    let report = &[
+        Level::ERROR.primary_title("mismatched types").element(
+            Snippet::source(source)
+                .path("file.rs")
+                .annotation(AnnotationKind::Primary.span(5..8).label("expected `u8`")),
+        ),
+        Level::HELP.secondary_title("convert it").element(
+            Snippet::source(source)
+                .path("file.rs")
+                .patch(Patch::new(5..8, "arg.into()")),
+        ),
+    ];
+
+    let expected_ascii = str![[r#"
+error: mismatched types
+ --> file.rs:1:6
+  |
+1 | call(arg);
+  |      ^^^ expected `u8`
+  |
+help: convert it
+  |
+1 | call(arg.into());
+  |         +++++++
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+error: mismatched types
+ at file.rs:1:6: expected `u8`
+help: convert it
+ on line 1, column 5 replace with: arg.into()
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn suggestion_separated_from_following_note() {
+    let source = "use std::slice;\n";
+    let report = &[Level::HELP
+        .primary_title("consider importing this struct")
+        .element(
+            Snippet::source(source)
+                .path("file.rs")
+                .patch(Patch::new(8..8, "slice::")),
+        )
+        .element(Level::NOTE.message("a note after the suggestion"))];
+
+    let expected_ascii = str![[r#"
+help: consider importing this struct
+ --> file.rs:1:9
+  |
+1 | use std:slice:::slice;
+  |         +++++++
+  = note: a note after the suggestion
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+help: consider importing this struct
+ on line 1, column 8 add: slice::note: a note after the suggestion
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn padding_between_suggestions() {
+    let source = "fn f() {}\n";
+    let report = &[Level::HELP
+        .primary_title("rename one of these")
+        .element(
+            Snippet::source(source)
+                .path("file.rs")
+                .patch(Patch::new(3..4, "a")),
+        )
+        .element(Padding)
+        .element(
+            Snippet::source(source)
+                .path("file.rs")
+                .patch(Patch::new(3..4, "b")),
+        )];
+
+    let expected_ascii = str![[r#"
+help: rename one of these
+ --> file.rs:1:4
+  |
+1 - fn f() {}
+1 + fn a() {}
+  |
+  |
+ --> file.rs:1:4
+  |
+1 - fn f() {}
+1 + fn b() {}
+  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+help: rename one of these
+ on line 1, column 3 replace with: a  b
+
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn multibyte_line_column_heuristic() {
+    let source = "\u{a0}abc\n";
+    let report = &[Level::ERROR.primary_title("mismatched types").element(
+        Snippet::source(source)
+            .path("file.rs")
+            .annotation(AnnotationKind::Primary.span(4..5).label("primary label"))
+            .annotation(AnnotationKind::Context.span(3..4).label("context label")),
+    )];
+
+    let expected_ascii = str![[r#"
+error: mismatched types
+ --> file.rs:1:4
+  |
+1 |  abc
+  |   -^ primary label
+  |   |
+  |   context label
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+error: mismatched types
+ at file.rs:1:4: primary label
+  on line 1: context label
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn suggestion_path_without_primary_path() {
+    let source = "fn main() { let x: Iter; }\n";
+    let report = &[Level::HELP
+        .primary_title("consider importing this struct")
+        .element(
+            Snippet::source(source)
+                .path("b.rs")
+                .patch(Patch::new(0..0, "use std::slice::Iter;\n")),
+        )];
+
+    let expected_ascii = str![[r#"
+help: consider importing this struct
+ --> b.rs:1:1
+  |
+1 + use std::slice::Iter;
+  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+help: consider importing this struct
+ on line 1, column 1 add: use std::slice::Iter;
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn control_characters_unsanitized() {
+    let source = "let x = 1;\n";
+    let report = &[Level::ERROR.primary_title("tab\there").element(
+        Snippet::source(source)
+            .path("file.rs")
+            .annotation(AnnotationKind::Primary.span(4..5).label("label\twith tab")),
+    )];
+
+    let expected_ascii = str![[r#"
+error: tab    here
+ --> file.rs:1:5
+  |
+1 | let x = 1;
+  |     ^ label	with tab
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+error: tab	here
+ at file.rs:1:5: label	with tab
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn anonymized_origin_line_numbers_with_no_graphics() {
+    let source = "fn main() {\n    call(arg);\n}\n";
+    let report = &[Level::ERROR.primary_title("mismatched types").element(
+        Snippet::source(source)
+            .path("$DIR/file.rs")
+            .annotation(AnnotationKind::Primary.span(21..24).label("expected `u8`")),
+    )];
+
+    let expected_ascii = str![[r#"
+error: mismatched types
+ --> $DIR/file.rs:LL:10
+  |
+2 |     call(arg);
+  |          ^^^ expected `u8`
+"#]];
+    let renderer_ascii = Renderer::plain().anonymized_origin_line_numbers(true);
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+error: mismatched types
+ at $DIR/file.rs:2:10: expected `u8`
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn alternative_suggestions_preserve_locations() {
+    let source = "first\nsecond";
+    let report = &[Level::HELP
+        .primary_title("change either declaration")
+        .element(
+            Snippet::source(source)
+                .path("file.rs")
+                .patch(Patch::new(0..5, "x")),
+        )
+        .element(
+            Snippet::source(source)
+                .path("file.rs")
+                .patch(Patch::new(6..12, "y")),
+        )];
+
+    let expected_ascii = str![[r#"
+help: change either declaration
+ --> file.rs:1:1
+  |
+1 - first
+1 + x
+  |
+2 - second
+2 + y
+  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+help: change either declaration
+ on line 1 replace with one of:
+  x
+  y
+
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn visible_annotation_does_not_determine_location() {
+    let source = "struct Context;\nlet x = 1;\n";
+    let report = &[Level::NOTE.primary_title("variable defined here").element(
+        Snippet::source(source)
+            .path("file.rs")
+            .annotation(AnnotationKind::Visible.span(0..15))
+            .annotation(AnnotationKind::Context.span(20..21)),
+    )];
+
+    let expected_ascii = str![[r#"
+note: variable defined here
+ --> file.rs:2:5
+  |
+1 | struct Context;
+2 | let x = 1;
+  |     -
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+note: variable defined here
+ at file.rs:1:1
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn multibyte_suggestion_column_heuristic() {
+    let source = "\u{2003}xyabc";
+    let report = &[Level::HELP.primary_title("replace the suffix").element(
+        Snippet::source(source)
+            .path("file.rs")
+            .patch(Patch::new(5..8, "first\nsecond")),
+    )];
+
+    let expected_ascii = str![[r#"
+help: replace the suffix
+ --> file.rs:1:4
+  |
+1 ~  xyfirst
+2 + second
+  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_no_graphics = str![[r#"
+help: replace the suffix
+ on line 1 replace with: first
+second
+"#]];
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
+}
+
+#[test]
+fn patch_replacement_escapes_terminal_controls() {
+    let report = &[Level::HELP.primary_title("change the value").element(
+        Snippet::source("old")
+            .path("file.rs")
+            .patch(Patch::new(0..3, "\x1b[2Jvalue")),
+    )];
+
+    let expected_ascii =
+        str![[r#""help: change the value\n --> file.rs:1:1\n  |\n1 - old\n1 + ␛[2Jvalue\n  |""#]]
+            .raw();
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(
+        format!("{:?}", renderer_ascii.render(report)),
+        expected_ascii
+    );
+
+    let expected_no_graphics =
+        str![[r#""help: change the value\n on line 1 replace with: \u{1b}[2Jvalue""#]].raw();
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(
+        format!("{:?}", renderer_no_graphics.render(report)),
+        expected_no_graphics,
+    );
+}
+
+#[test]
+fn alternative_patch_replacement_normalizes_bidi_controls() {
+    let report = &[Level::HELP
+        .primary_title("change the value")
+        .element(
+            Snippet::source("old")
+                .path("file.rs")
+                .patch(Patch::new(0..3, "\u{202e}value\u{202c}")),
+        )
+        .element(
+            Snippet::source("old")
+                .path("file.rs")
+                .patch(Patch::new(0..3, "other")),
+        )];
+
+    let expected_ascii = str![[r#""help: change the value\n --> file.rs:1:1\n  |\n1 - old\n1 + �value�\n  |\n1 - old\n1 + other\n  |""#]].raw();
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(
+        format!("{:?}", renderer_ascii.render(report)),
+        expected_ascii
+    );
+
+    let expected_no_graphics = str![[r#""help: change the value\n on line 1 replace with one of:\n  \u{202e}value\u{202c}\n  other\n""#]].raw();
+    let renderer_no_graphics = renderer_ascii.no_graphics(true);
+    assert_data_eq!(
+        format!("{:?}", renderer_no_graphics.render(report)),
+        expected_no_graphics,
+    );
 }
