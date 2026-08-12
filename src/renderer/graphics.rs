@@ -2635,7 +2635,7 @@ pub(crate) enum TitleStyle {
     Message,
 }
 
-struct Hyperlink<D: fmt::Display> {
+pub(crate) struct Hyperlink<D: fmt::Display> {
     url: Option<D>,
 }
 

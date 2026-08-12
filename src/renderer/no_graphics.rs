@@ -3,7 +3,7 @@ use alloc::{string::String, vec::Vec};
 use core::cmp::Reverse;
 use core::fmt::{self, Write};
 
-use super::graphics::{MessageOrTitle, TitleStyle, str_width};
+use super::graphics::{Hyperlink, MessageOrTitle, TitleStyle, str_width};
 use super::preprocess::{Preprocessed, PreprocessedElement, PreprocessedGroup};
 use super::{ElementStyle, Stylesheet, normalize_whitespace};
 use crate::{Id, Renderer, Report};
@@ -92,7 +92,13 @@ pub(crate) fn render_no_graphics(
             } else {
                 TitleStyle::Primary
             };
-            render_title(title, &mut output, title_style, &renderer.stylesheet)?;
+            render_title(
+                title,
+                &mut output,
+                title_style,
+                &renderer.stylesheet,
+                renderer.hyperlink,
+            )?;
             if iter.peek().is_some()
                 || elements
                     .iter()
@@ -116,6 +122,7 @@ pub(crate) fn render_no_graphics(
                         &mut output,
                         TitleStyle::Message,
                         &renderer.stylesheet,
+                        renderer.hyperlink,
                     )?;
                     if peek.is_some() {
                         writeln!(output)?;
@@ -363,6 +370,7 @@ fn render_title(
     buffer: &mut String,
     title_style: TitleStyle,
     stylesheet: &Stylesheet,
+    hyperlink: bool,
 ) -> Result<(), fmt::Error> {
     let (label_style, title_element_style) = match title_style {
         TitleStyle::Primary => (
@@ -388,11 +396,13 @@ fn render_title(
             label_width += str_width(title.level().as_str());
         }
 
-        if let Some(Id {
-            id: Some(id),
-            url: _,
-        }) = &title.id()
-        {
+        if let Some(Id { id: Some(id), url }) = &title.id() {
+            let url = url
+                .as_deref()
+                .filter(|_| hyperlink)
+                .map(Hyperlink::with_url)
+                .unwrap_or_default();
+
             if level_is_visible {
                 // error EXXXX: message
                 //      ^
@@ -401,7 +411,7 @@ fn render_title(
             }
             // error EXXXX: message
             //       ^^^^^
-            write!(buffer, "{label_style}{id}{label_style:#}")?;
+            write!(buffer, "{label_style}{url}{id}{url:#}{label_style:#}")?;
             label_width += str_width(id);
         }
         // error EXXXX: message
