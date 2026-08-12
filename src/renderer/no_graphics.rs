@@ -389,6 +389,11 @@ fn render_title(
     let mut label_width = 0;
     let level_is_visible = title.level().name != Some(None);
     if level_is_visible || title.id().is_some() {
+        if title_style == TitleStyle::Message {
+            write!(buffer, " ")?;
+            label_width += 1;
+        }
+
         if level_is_visible {
             // error EXXXX: message
             // ^^^^^

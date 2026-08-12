@@ -2053,8 +2053,8 @@ warning: non-local `macro_rules!` definition, `#[macro_export]` macro should be 
  at $DIR/auxiliary/nested-macro-rules.rs:7:9 to 12:10
   on line 4: in this expansion of `nested_macro_rules::outer_macro!`
  at $DIR/nested-macro-rules.rs:23:5: in this macro invocation
-help: remove the `#[macro_export]` or move this `macro_rules!` outside the of the current function `main`
-note: a `macro_rules!` definition is non-local if it is nested inside an item and has a `#[macro_export]` attribute
+ help: remove the `#[macro_export]` or move this `macro_rules!` outside the of the current function `main`
+ note: a `macro_rules!` definition is non-local if it is nested inside an item and has a `#[macro_export]` attribute
 note: the lint level is defined here
  at $DIR/nested-macro-rules.rs:8:9
 "#]];
@@ -2442,8 +2442,8 @@ note: `NonEmptyEnum5` defined here
   on line 41: not covered
   on line 42: not covered
   on line 43: not covered
-note: the matched value is of type `NonEmptyEnum5`
-note: match arms with guards don't count towards exhaustivity
+ note: the matched value is of type `NonEmptyEnum5`
+ note: match arms with guards don't count towards exhaustivity
 help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern as shown, or multiple match arms
  at $DIR/empty-match.rs:17:33: ,
                 _ => todo!()
@@ -2549,7 +2549,7 @@ error E0038: the trait alias `EqAlias` is not dyn compatible
 note: for a trait to be dyn compatible it needs to allow building a vtable
       for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
  at $SRC_DIR/core/src/cmp.rs:334:14
-note: ...because it uses `Self` as a type parameter
+ note: ...because it uses `Self` as a type parameter
  at $DIR/object-fail.rs:3:7: this trait is not dyn compatible...
 "#]];
     let renderer = renderer.no_graphics(true);
@@ -2874,7 +2874,7 @@ error: `Iterator::map` call that discard the iterator's values
   on line 11, column 18 to line 14, column 7: after this call to map, the resulting iterator is `impl Iterator<Item = ()>`, which means the only information carried by the iterator is the number of items
   on line 11, column 22: this function returns `()`, which is likely not what you wanted
   on line 11, column 22 to line 14, column 6: called `Iterator::map` with callable that returns `()`
-note: `Iterator::map`, like many of the methods on `Iterator`, gets executed lazily, meaning that its effects won't be visible until it is iterated
+ note: `Iterator::map`, like many of the methods on `Iterator`, gets executed lazily, meaning that its effects won't be visible until it is iterated
 help: you might have meant to use `Iterator::for_each`
  on line 11, column 18 replace with: for_each
 "#]];
@@ -3727,8 +3727,8 @@ error E0308: mismatched types
  at $DIR/file.txt:3:1: expected `&[u8]`, found `&str`
  at $DIR/mismatched-types.rs:2:12: expected due to this
   on line 2, column 20: in this macro invocation
-note: expected reference `&[u8]`
-         found reference `&'static str`
+ note: expected reference `&[u8]`
+          found reference `&'static str`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3798,8 +3798,8 @@ error[E0308]: mismatched types
 error E0308: mismatched types
  at $DIR/mismatched-types.rs:3:19: expected `&str`, found `&[u8; 0]`
   on line 3, column 12: expected due to this
-note: expected reference `&str`
-         found reference `&'static [u8; 0]`
+ note: expected reference `&str`
+          found reference `&'static [u8; 0]`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4006,7 +4006,7 @@ help: use an automatic link instead
     let expected_no_graphics = str![[r#"
 error: this URL is not a hyperlink
  at $DIR/diagnostic-width.rs:4:41
-note: bare URLs are not automatically turned into clickable links
+ note: bare URLs are not automatically turned into clickable links
 note: the lint level is defined here
  at $DIR/diagnostic-width.rs:2:9
 help: use an automatic link instead
@@ -4109,9 +4109,9 @@ help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicit
     let expected_no_graphics = str![[r#"
 warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (due to backwards compatibility), but will resolve to `<[T; N] as IntoIterator>::into_iter` in Rust 2021
  at lint_example.rs:3:11
-warning: this changes meaning in Rust 2021
-note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
-note: `#[warn(array_into_iter)]` on by default
+ warning: this changes meaning in Rust 2021
+ note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
+ note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
  on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
@@ -4232,7 +4232,7 @@ error E0369: cannot add `Box<isize>` to `Box<isize>`
 note: the foreign item type `Box<isize>` doesn't implement `Add`
  at $SRC_DIR/alloc/src/boxed.rs:231:0
  at $SRC_DIR/alloc/src/boxed.rs:234:1
-note: not implement `Add`
+ note: not implement `Add`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4381,8 +4381,8 @@ help: trait `Future` which provides `poll` is implemented but not in scope; perh
 error E0599: no method named `poll` found for struct `Pin<&mut impl Future<Output = ()>>` in the current scope
  at $DIR/dont-project-to-specializable-projection.rs:48:28: method not found in `Pin<&mut impl Future<Output = ()>>`
  at $SRC_DIR/core/src/future/future.rs:104:7
-note: the method is available for `Pin<&mut impl Future<Output = ()>>` here
-help: items from traits can only be used if the trait is in scope
+ note: the method is available for `Pin<&mut impl Future<Output = ()>>` here
+ help: items from traits can only be used if the trait is in scope
 help: trait `Future` which provides `poll` is implemented but not in scope; perhaps you want to import it
  on line 6, column 1 add: use std::future::Future;
 "#]];
@@ -4497,9 +4497,9 @@ error E0369: binary operation `==` cannot be applied to type `(std::io::Error, T
   on line 11, column 12: (std::io::Error, Thread)
 note: the foreign item types don't implement required traits for this operation to be valid
  at $SRC_DIR/std/src/io/error.rs:65:0
-note: not implement `PartialEq`
+ note: not implement `PartialEq`
  at $SRC_DIR/std/src/thread/mod.rs:1415:0
-note: not implement `PartialEq`
+ note: not implement `PartialEq`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4580,8 +4580,8 @@ error: cannot find derive macro `Eqr` in this scope
 error: cannot find derive macro `Eqr` in this scope
  at $DIR/deriving-meta-unknown-trait.rs:1:10: help: a derive macro with a similar name exists: `Eq`
  at $SRC_DIR/core/src/cmp.rs:356:0
-note: similarly named derive macro `Eq` defined here
-note: duplicate diagnostic emitted due to `-Z deduplicate-diagnostics=no`
+ note: similarly named derive macro `Eq` defined here
+ note: duplicate diagnostic emitted due to `-Z deduplicate-diagnostics=no`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4698,15 +4698,15 @@ note: the traits `Iterator` and `ToTokens` must be implemented
 error E0599: the method `quote_into_iter` exists for struct `Ipv4Addr`, but its trait bounds were not satisfied
  at $DIR/not-repeatable.rs:11:13: method cannot be called on `Ipv4Addr` due to unsatisfied trait bounds
   on line 7: method `quote_into_iter` not found for this struct because it doesn't satisfy `Ipv4Addr: Iterator`, `Ipv4Addr: ToTokens`, `Ipv4Addr: proc_macro::ext::RepIteratorExt` or `Ipv4Addr: proc_macro::ext::RepToTokensExt`
-note: the following trait bounds were not satisfied:
-      `Ipv4Addr: Iterator`
-      which is required by `Ipv4Addr: proc_macro::ext::RepIteratorExt`
-      `&Ipv4Addr: Iterator`
-      which is required by `&Ipv4Addr: proc_macro::ext::RepIteratorExt`
-      `Ipv4Addr: ToTokens`
-      which is required by `Ipv4Addr: proc_macro::ext::RepToTokensExt`
-      `&mut Ipv4Addr: Iterator`
-      which is required by `&mut Ipv4Addr: proc_macro::ext::RepIteratorExt`
+ note: the following trait bounds were not satisfied:
+       `Ipv4Addr: Iterator`
+       which is required by `Ipv4Addr: proc_macro::ext::RepIteratorExt`
+       `&Ipv4Addr: Iterator`
+       which is required by `&Ipv4Addr: proc_macro::ext::RepIteratorExt`
+       `Ipv4Addr: ToTokens`
+       which is required by `Ipv4Addr: proc_macro::ext::RepToTokensExt`
+       `&mut Ipv4Addr: Iterator`
+       which is required by `&mut Ipv4Addr: proc_macro::ext::RepIteratorExt`
 note: the traits `Iterator` and `ToTokens` must be implemented
  at $SRC_DIR/proc_macro/src/to_tokens.rs:11:0
  at $SRC_DIR/core/src/iter/traits/iterator.rs:39:0
@@ -4807,8 +4807,8 @@ error[E0220]: associated type `Pr` not found for `S<bool>` in the current scope
 error E0220: associated type `Pr` not found for `S<bool>` in the current scope
  at $DIR/not-found-self-type-differs-shadowing-trait-item.rs:28:23: associated item not found in `S<bool>`
   on line 12: associated type `Pr` not found for this struct
-note: the associated type was found for
-      
+ note: the associated type was found for
+       
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4924,8 +4924,8 @@ note: the lint level is defined here
 error: extern blocks should be unsafe
  at $DIR/unsafe-extern-suggestion.rs:6:1 to 11:2
   on line 6: help: needs `unsafe` before the extern keyword: `unsafe`
-warning: this is accepted in the current edition (Rust 2015) but is a hard error in Rust 2024!
-note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2024/unsafe-extern.html>
+ warning: this is accepted in the current edition (Rust 2015) but is a hard error in Rust 2024!
+ note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2024/unsafe-extern.html>
 note: the lint level is defined here
  at $DIR/unsafe-extern-suggestion.rs:3:9
 "#]];
@@ -5076,7 +5076,7 @@ error E0308: mismatched types
  at $DIR/alloc-error-handler-bad-signature-2.rs:10:1 to 14:2: expected `Layout`, found `core::alloc::Layout`
   on line 9: in this procedural macro expansion
   on line 10 to line 12, column 2: arguments to this function are incorrect
-note: `core::alloc::Layout` and `Layout` have similar names, but are actually distinct types
+ note: `core::alloc::Layout` and `Layout` have similar names, but are actually distinct types
 note: `core::alloc::Layout` is defined in crate `core`
  at $SRC_DIR/core/src/alloc/layout.rs:40:0
 note: `Layout` is defined in the current crate
@@ -5290,8 +5290,8 @@ error E0004: non-exhaustive patterns: `Some(Private { misc: true, .. })` not cov
 note: `Option<Private>` defined here
  at $SRC_DIR/core/src/option.rs:593:0
  at $SRC_DIR/core/src/option.rs:601:4
-note: not covered
-note: the matched value is of type `Option<Private>`
+ note: not covered
+ note: the matched value is of type `Option<Private>`
 help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
  on line 33, column 57 add: ,
         Some(Private { misc: true, .. }) => todo!()
@@ -5417,9 +5417,9 @@ error E0038: the trait `Ord` is not dyn compatible
 note: for a trait to be dyn compatible it needs to allow building a vtable
       for more information, visit <https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility>
  at $SRC_DIR/core/src/cmp.rs:961:20
-note: the trait is not dyn compatible because it uses `Self` as a type parameter
+ note: the trait is not dyn compatible because it uses `Self` as a type parameter
  at $SRC_DIR/core/src/cmp.rs:338:14
-note: the trait is not dyn compatible because it uses `Self` as a type parameter
+ note: the trait is not dyn compatible because it uses `Self` as a type parameter
 help: consider using an opaque type instead
  on line 11, column 33 add: impl 
 "#]];
@@ -5536,9 +5536,9 @@ error E0369: binary operation `==` cannot be applied to type `(std::io::Error, T
   on line 11, column 12: (std::io::Error, Thread)
 note: the foreign item types don't implement required traits for this operation to be valid
  at $SRC_DIR/std/src/io/error.rs:65:0
-note: not implement `PartialEq`
+ note: not implement `PartialEq`
  at $SRC_DIR/std/src/thread/mod.rs:1439:0
-note: not implement `PartialEq`
+ note: not implement `PartialEq`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5836,7 +5836,7 @@ help: consider using the `Default` trait
 error E0423: expected function, tuple struct or tuple variant, found struct `std::collections::HashMap`
  at $DIR/multi-suggestion.rs:17:13
  at $SRC_DIR/std/src/collections/hash/map.rs:242:0
-note: `std::collections::HashMap` defined here
+ note: `std::collections::HashMap` defined here
 help: you might have meant to use an associated function to build this type
  on line 17, column 38 replace with one of:
   ::new()
@@ -6044,8 +6044,8 @@ error E0423: cannot initialize a tuple struct which contains private fields
  at $DIR/suggest-box-new.rs:11:19
 note: constructor is not visible here due to private fields
  at $SRC_DIR/alloc/src/boxed.rs:234:2
-note: private field
-note: private field
+ note: private field
+ note: private field
 help: you might have meant to use an associated function to build this type
  on line 11, column 22 replace with one of:
   ::new(_)
@@ -6235,8 +6235,8 @@ error: invalid `--check-cfg` argument: `cfg(`
 
     let expected_no_graphics = str![[r#"
 error: invalid `--check-cfg` argument: `cfg(`
-note: expected `cfg(name, values("value1", "value2", ... "valueN"))`
-note: visit <https://doc.rust-lang.org/nightly/rustc/check-cfg.html> for more details
+ note: expected `cfg(name, values("value1", "value2", ... "valueN"))`
+ note: visit <https://doc.rust-lang.org/nightly/rustc/check-cfg.html> for more details
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6332,12 +6332,12 @@ help: the constant being evaluated
     let expected_no_graphics = str![[r#"
 error: constant evaluation is taking a long time
  at $SRC_DIR/core/src/num/mod.rs:1151:4
-note: this lint makes sure the compiler doesn't get stuck due to infinite loops in const eval.
-      If your compilation actually takes a long time, you can safely allow the lint.
+ note: this lint makes sure the compiler doesn't get stuck due to infinite loops in const eval.
+       If your compilation actually takes a long time, you can safely allow the lint.
 help: the constant being evaluated
  at $DIR/timeout.rs:7:1
-note: `#[deny(long_running_const_eval)]` on by default
-note: this error originates in the macro `uint_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+ note: `#[deny(long_running_const_eval)]` on by default
+ note: this error originates in the macro `uint_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6552,8 +6552,8 @@ error E0061: this function takes 1 argument but 3 arguments were supplied
   on line 8: unexpected argument #3 of type `&'static str`
 note: expected `usize`, found fn item
  at $DIR/issue-109854.rs:4:5
-note: expected type `[22;1;35musize[22;39m`
-      found fn item `[22;1;35mfn() {generate_setter}[22;39m`
+ note: expected type `[22;1;35musize[22;39m`
+       found fn item `[22;1;35mfn() {generate_setter}[22;39m`
 note: associated function defined here
  at $SRC_DIR/alloc/src/string.rs:480:11
 help: remove the extra arguments
@@ -6646,7 +6646,7 @@ help: otherwise remove the non-wildcard arms
 error: these match arms have identical bodies
  at tests/ui/match_same_arms.rs:20:9
   on line 22: the wildcard arm
-help: if this is unintentional make the arms return different values
+ help: if this is unintentional make the arms return different values
 help: otherwise remove the non-wildcard arms
  on line 20, column 9
 "#]];

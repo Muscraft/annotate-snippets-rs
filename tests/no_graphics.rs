@@ -65,8 +65,8 @@ error[E0599]: no method named `build` found for struct `PartialTest<true, false>
 error E0599: no method named `build` found for struct `PartialTest<true, false>` in the current scope
  at tests/no_compile/missing_fields_in_builder.rs:12:33: method not found in `PartialTest<true, false>`
   on line 3: method `build` not found for this struct
-note: the method was found for
-      - `PartialTest<true, true>`
+ note: the method was found for
+       - `PartialTest<true, true>`
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -149,8 +149,8 @@ help: one of the expressions' fields has a method of the same name
 error E0599: no method named `with_bar` found for struct `PartialTest<true, true>` in the current scope
  at tests/no_compile/missing_fields_in_builder.rs:15:45: method not found in `PartialTest<true, true>`
   on line 3: method `with_bar` not found for this struct
-note: the method was found for
-      - `PartialTest<foo_bitfield, false>`
+ note: the method was found for
+       - `PartialTest<foo_bitfield, false>`
 help: one of the expressions' fields has a method of the same name
  on line 15, column 45 add: value.
 "#]];
@@ -397,7 +397,7 @@ error: hello to you, too!
  at $DIR/multispan.rs:18:5
 note: found these 'hi's
  at $DIR/multispan.rs:18:12
-note: this error originates in the macro `hello` (in Nightly builds, run with -Z macro-backtrace for more info)
+ note: this error originates in the macro `hello` (in Nightly builds, run with -Z macro-backtrace for more info)
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -686,7 +686,7 @@ help: consider importing this struct
     let expected_no_graphics = str![[r#"
 help: consider importing this struct
  at file.rs:1:9 add: slice::
-note: a note after the suggestion
+ note: a note after the suggestion
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);

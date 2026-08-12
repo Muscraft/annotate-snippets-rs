@@ -378,7 +378,7 @@ error:
 
     let expected_no_graphics = str![[r#"
 error: 
-error: This __is__ a title
+ error: This __is__ a title
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3011,7 +3011,7 @@ error E0271: type mismatch resolving `<Result<Result<(), Result<Result<(), Resul
  at $DIR/E0271.rs:20:5 to 32:6: type mismatch resolving `<Result<Result<(), Result<Result<(), ...>, ...>>, ...> as Future>::Error == Foo`
 note: expected this to be `Foo`
  at $DIR/E0271.rs:10:18
-note: required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`
+ note: required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3133,8 +3133,8 @@ error E0271: type mismatch resolving `<Result<Result<(), Result<Result<(), Resul
  at $DIR/E0271.rs:20:5 to 32:6: type mismatch resolving `<Result<Result<(), Result<Result<(), ...>, ...>>, ...> as Future>::Error == Foo`
 note: expected this to be `Foo`
  at $DIR/E0271.rs:10:18
-note: required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`
-note: a second note
+ note: required for the cast from `Box<Result<Result<(), Result<Result<(), Result<Result<(), Option<{integer}>>, ()>>, ()>>, ()>>` to `Box<(dyn Future<Error = Foo> + 'static)>`
+ note: a second note
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3331,10 +3331,10 @@ error[E0308]: mismatched types
 error E0308: mismatched types
  at $DIR/long-E0308.rs:48:9 to 52:35: expected `Atype<Btype<Ctype<..., i32>, i32>, i32>`, found `Result<Result<Result<..., _>, _>, _>`
   on line 24, column 12 to line 48, column 6: expected due to this
-note: expected struct `Atype<Btype<..., i32>, i32>`
-           found enum `Result<Result<..., _>, _>`
-note: the full name for the type has been written to '$TEST_BUILD_DIR/$FILE.long-type-hash.txt'
-note: consider using `--verbose` to print the full type name to the console
+ note: expected struct `Atype<Btype<..., i32>, i32>`
+            found enum `Result<Result<..., _>, _>`
+ note: the full name for the type has been written to '$TEST_BUILD_DIR/$FILE.long-type-hash.txt'
+ note: consider using `--verbose` to print the full type name to the console
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3445,8 +3445,8 @@ note: function defined here
 error E0308: mismatched types
  at $DIR/unicode-output.rs:23:11: one type is more general than the other
   on line 23: arguments to this function are incorrect
-note: expected fn pointer `for<'a> fn(Box<(dyn Any + Send + 'a)>) -> Pin<_>`
-            found fn item `fn(Box<(dyn Any + Send + 'static)>) -> Pin<_> {wrapped_fn}`
+ note: expected fn pointer `for<'a> fn(Box<(dyn Any + Send + 'a)>) -> Pin<_>`
+             found fn item `fn(Box<(dyn Any + Send + 'static)>) -> Pin<_> {wrapped_fn}`
 note: function defined here
  at $DIR/unicode-output.rs:12:10 to 14:4
 "#]];
@@ -3893,7 +3893,7 @@ error E0369: cannot add `&str` to `&str`
  at $DIR/non-1-width-unicode-multiline-label.rs:7:260: `+` cannot be used to concatenate two `&str` strings
   on line 7, column 245: &str
   on line 7, column 262: &str
-note: string concatenation requires an owned `String` on the left
+ note: string concatenation requires an owned `String` on the left
 help: create an owned `String` from a string reference
  on line 7, column 259 add: .to_owned()
 "#]];
@@ -3969,7 +3969,7 @@ error: couldn't read `$DIR/not-utf8.bin`: stream did not contain valid UTF-8
  at $DIR/not-utf8.rs:6:5
 note: byte `193` is not valid utf-8
  at $DIR/not-utf8.bin:1:1
-note: this error originates in the macro `include` (in Nightly builds, run with -Z macro-backtrace for more info)
+ note: this error originates in the macro `include` (in Nightly builds, run with -Z macro-backtrace for more info)
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4170,8 +4170,8 @@ error[E0308]: mismatched types
 error E0308: mismatched types
  at $DIR/mismatched-types.rs:3:19: expected `&str`, found `&[u8; 0]`
   on line 3, column 12: expected due to this
-custom: expected reference `&str`
-        found reference `&'static [u8; 0]`
+ custom: expected reference `&str`
+         found reference `&'static [u8; 0]`
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4482,9 +4482,9 @@ help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicit
     let expected_no_graphics = str![[r#"
 warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (due to backwards compatibility), but will resolve to `<[T; N] as IntoIterator>::into_iter` in Rust 2021
  at lint_example.rs:3:11
-warning: this changes meaning in Rust 2021
-note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
-note: `#[warn(array_into_iter)]` on by default
+ warning: this changes meaning in Rust 2021
+ note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
+ note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
  on line 5, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
@@ -4588,9 +4588,9 @@ help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicit
     let expected_no_graphics = str![[r#"
 warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (due to backwards compatibility), but will resolve to `<[T; N] as IntoIterator>::into_iter` in Rust 2021
  at lint_example.rs:3:11
-warning: this changes meaning in Rust 2021
-note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
-note: `#[warn(array_into_iter)]` on by default
+ warning: this changes meaning in Rust 2021
+ note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
+ note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
  on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
@@ -4694,9 +4694,9 @@ help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicit
     let expected_no_graphics = str![[r#"
 warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (due to backwards compatibility), but will resolve to `<[T; N] as IntoIterator>::into_iter` in Rust 2021
  at lint_example.rs:3:11
-warning: this changes meaning in Rust 2021
-note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
-note: `#[warn(array_into_iter)]` on by default
+ warning: this changes meaning in Rust 2021
+ note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
+ note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
  on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
@@ -5249,7 +5249,7 @@ error[E0609]: no field `field` on type `Thing`
 
     let expected_no_graphics = str![[r#"
 error E0609: no field `field` on type `Thing`
-note: a `Title` then a `Message`!?!?
+ note: a `Title` then a `Message`!?!?
  at $DIR/too-many-field-suggestions.rs:26:7: unknown field
 "#]];
     let renderer = renderer.no_graphics(true);
