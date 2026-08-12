@@ -3,7 +3,7 @@ use alloc::{string::String, vec::Vec};
 use core::cmp::Reverse;
 use core::fmt::{self, Write};
 
-use super::graphics::{MessageOrTitle, str_width};
+use super::graphics::{MessageOrTitle, TitleStyle, str_width};
 use super::preprocess::{Preprocessed, PreprocessedElement, PreprocessedGroup};
 use super::{ElementStyle, Stylesheet, normalize_whitespace};
 use crate::{Id, Renderer, Report};
@@ -87,16 +87,12 @@ pub(crate) fn render_no_graphics(
     }) = iter.next()
     {
         if let Some(title) = &group.title {
-            render_title(
-                title,
-                &mut output,
-                if title.allows_styling {
-                    ElementStyle::HeaderMsg
-                } else {
-                    ElementStyle::MainHeaderMsg
-                },
-                &renderer.stylesheet,
-            )?;
+            let title_style = if title.allows_styling {
+                TitleStyle::Secondary
+            } else {
+                TitleStyle::Primary
+            };
+            render_title(title, &mut output, title_style, &renderer.stylesheet)?;
             if iter.peek().is_some()
                 || elements
                     .iter()
@@ -118,7 +114,7 @@ pub(crate) fn render_no_graphics(
                     render_title(
                         message,
                         &mut output,
-                        ElementStyle::HeaderMsg,
+                        TitleStyle::Message,
                         &renderer.stylesheet,
                     )?;
                     if peek.is_some() {
@@ -365,24 +361,30 @@ pub(crate) fn render_no_graphics(
 fn render_title(
     title: &dyn MessageOrTitle,
     buffer: &mut String,
-    style: ElementStyle,
+    title_style: TitleStyle,
     stylesheet: &Stylesheet,
 ) -> Result<(), fmt::Error> {
-    let mut label_width = 0;
-    let st = style.color_spec(title.level(), stylesheet);
+    let (label_style, title_element_style) = match title_style {
+        TitleStyle::Primary => (
+            ElementStyle::Level(title.level().level),
+            ElementStyle::MainHeaderMsg,
+        ),
+        TitleStyle::Secondary => (
+            ElementStyle::Level(title.level().level),
+            ElementStyle::HeaderMsg,
+        ),
+        TitleStyle::Message => (ElementStyle::MainHeaderMsg, ElementStyle::NoStyle),
+    };
+    let label_style = label_style.color_spec(title.level(), stylesheet);
+    let title_element_style = title_element_style.color_spec(title.level(), stylesheet);
 
+    let mut label_width = 0;
     let level_is_visible = title.level().name != Some(None);
     if level_is_visible || title.id().is_some() {
         if level_is_visible {
             // error EXXXX: message
             // ^^^^^
-            write!(
-                buffer,
-                "{}{}{0:#}",
-                ElementStyle::Level(title.level().level)
-                    .color_spec(&crate::Level::NOTE, stylesheet),
-                title.level().as_str(),
-            )?;
+            write!(buffer, "{}{}{0:#}", label_style, title.level().as_str(),)?;
             label_width += str_width(title.level().as_str());
         }
 
@@ -399,22 +401,25 @@ fn render_title(
             }
             // error EXXXX: message
             //       ^^^^^
-            write!(buffer, "{id}")?;
+            write!(buffer, "{label_style}{id}{label_style:#}")?;
             label_width += str_width(id);
         }
         // error EXXXX: message
         //            ^
-        write!(buffer, ": ")?;
+        write!(buffer, "{title_element_style}: {title_element_style:#}")?;
         label_width += 2;
     }
     let padding = " ".repeat(label_width);
 
     // error EXXXX: message
     //              ^^^^^^^
-    let title_str = if title.allows_styling() {
-        Cow::Borrowed(title.text())
+    let (title_str, st) = if title.allows_styling() {
+        (
+            Cow::Borrowed(title.text()),
+            ElementStyle::NoStyle.color_spec(title.level(), stylesheet),
+        )
     } else {
-        normalize_whitespace(title.text())
+        (normalize_whitespace(title.text()), title_element_style)
     };
     for (i, text) in title_str.split('\n').enumerate() {
         if i != 0 {

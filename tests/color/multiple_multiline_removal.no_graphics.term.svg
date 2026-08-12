@@ -20,7 +20,7 @@
   <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
 
   <text xml:space="preserve" class="container fg">
-    <tspan x="10px" y="28px"><tspan class="fg-bright-red bold">error</tspan><tspan> E0423: </tspan><tspan class="bold">cannot initialize a tuple struct which contains private fields</tspan>
+    <tspan x="10px" y="28px"><tspan class="fg-bright-red bold">error</tspan><tspan> </tspan><tspan class="fg-bright-red bold">E0423</tspan><tspan class="bold">: </tspan><tspan class="bold">cannot initialize a tuple struct which contains private fields</tspan>
 </tspan>
     <tspan x="10px" y="46px"><tspan> at $DIR/suggest-box-new.rs:8:19</tspan>
 </tspan>
@@ -28,9 +28,9 @@
 </tspan>
     <tspan x="10px" y="82px"><tspan> at $SRC_DIR/alloc/src/boxed.rs:234:2</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan class="fg-bright-green bold">note</tspan><tspan>: private field</tspan>
+    <tspan x="10px" y="100px"><tspan class="bold">note</tspan><tspan>: private field</tspan>
 </tspan>
-    <tspan x="10px" y="118px"><tspan class="fg-bright-green bold">note</tspan><tspan>: private field</tspan>
+    <tspan x="10px" y="118px"><tspan class="bold">note</tspan><tspan>: private field</tspan>
 </tspan>
     <tspan x="10px" y="136px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: you might have meant to use an associated function to build this type</tspan>
 </tspan>

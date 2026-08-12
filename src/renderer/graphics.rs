@@ -2629,7 +2629,7 @@ pub(crate) struct UnderlineParts {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum TitleStyle {
+pub(crate) enum TitleStyle {
     Primary,
     Secondary,
     Message,
