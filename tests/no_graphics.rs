@@ -913,7 +913,7 @@ note: variable defined here
 
     let expected_no_graphics = str![[r#"
 note: variable defined here
- at file.rs:1:1
+ at file.rs:2:5
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);

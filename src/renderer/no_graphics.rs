@@ -6,7 +6,7 @@ use core::fmt::{self, Write};
 use super::graphics::{Hyperlink, MessageOrTitle, TitleStyle, str_width};
 use super::preprocess::{Preprocessed, PreprocessedElement, PreprocessedGroup};
 use super::{ElementStyle, Stylesheet, normalize_whitespace};
-use crate::{Id, Renderer, Report};
+use crate::{AnnotationKind, Id, Renderer, Report};
 
 /// Print out a file position optimized for the data available.
 ///
@@ -131,7 +131,11 @@ pub(crate) fn render_no_graphics(
                 PreprocessedElement::Cause((snippet, sm, _)) => {
                     last_suggestion_path = None;
 
-                    let mut annotations = snippet.markers.iter().collect::<Vec<_>>();
+                    let mut annotations = snippet
+                        .markers
+                        .iter()
+                        .filter(|ann| !matches!(ann.kind, AnnotationKind::Visible))
+                        .collect::<Vec<_>>();
                     annotations.sort_by_key(|a| (Reverse(a.kind.is_primary()), a.span.start));
                     if annotations.is_empty() {
                         // We have a diagnostic with no span labels, but we should show *some*

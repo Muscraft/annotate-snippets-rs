@@ -5454,7 +5454,6 @@ error: ensure single line at line 0 rendered correctly with group line lined up
     let expected_no_graphics = str![[r#"
 error: ensure single line at line 0 rendered correctly with group line lined up
  at Cargo.toml:0:8: unexpected token
-  on line 0: while parsing statement
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
