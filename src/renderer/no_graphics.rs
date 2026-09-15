@@ -240,9 +240,9 @@ pub(crate) fn render_no_graphics(
 
                         let col = if lo.line == hi.line
                             && let Some(line) = sm.get_line(lo.line)
-                            && let Some(pre) = line.get(..lo.char)
+                            && let Some(pre) = line.get(..lo.byte)
                             && pre.chars().all(|c| c.is_whitespace())
-                            && let Some(post) = line.get(hi.char..)
+                            && let Some(post) = line.get(hi.byte..)
                             && (replacement.lines().count() > 1
                                 || post.chars().all(|c| c.is_whitespace()))
                         {

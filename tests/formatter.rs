@@ -2462,7 +2462,7 @@ error E0499: cannot borrow `chars` as mutable more than once at a time
   on line 4, column 15: first mutable borrow occurs here
   on line 4, column 15: first borrow later used here
 help: if you want to call `next` on a iterator within the loop, consider using `while let`
- on line 4 replace with: let iter = chars.by_ref();
+ on line 4, column 5 replace with: let iter = chars.by_ref();
     while let Some(
 "#]];
     let renderer = renderer.no_graphics(true);

@@ -941,7 +941,7 @@ help: replace the suffix
 
     let expected_no_graphics = str![[r#"
 help: replace the suffix
- at file.rs:1 replace with: first
+ at file.rs:1:4 replace with: first
 second
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
