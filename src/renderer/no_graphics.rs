@@ -248,27 +248,50 @@ pub(crate) fn render_no_graphics(
                 PreprocessedElement::Suggestion((
                     suggestion,
                     sm,
-                    _spliced_lines,
+                    spliced_lines,
                     _display_suggestion,
                 )) => {
-                    let Some(first_patch) = suggestion.markers.first() else {
+                    if spliced_lines.patches.is_empty() {
+                        // We have a suggestion with no patches, we don't render anything.
                         continue;
-                    };
+                    }
+
                     let next_is_suggestion =
                         matches!(peek, Some(PreprocessedElement::Suggestion(_)));
 
-                    let replacement =
-                        normalize_whitespace(first_patch.replacement.trim_end_matches('\n'));
-                    if last_suggestion_path.is_none() {
-                        let (lo, hi) =
-                            sm.span_to_locations(first_patch.span.start..first_patch.span.end);
+                    // We only include the file path when it is different to the
+                    // primary file.
+                    //
+                    // `at $DIR/file.txt:LL:CC: label`
+                    //  ^^^^^^^^^^^^^^^^^
+                    let path = if suggestion.path.as_ref() != primary_path.or(report_primary_path)
+                        && let Some(path) = suggestion.path.as_ref()
+                        && last_suggestion_path.map(|(p, _)| p) != Some(suggestion.path.as_ref())
+                    {
+                        Some(path.as_ref())
+                    } else {
+                        None
+                    };
+
+                    let padding = if let Some(count) = last_suggestion_path.map(|(_, c)| c) {
+                        writeln!(output, " option {}", count + 1)?;
+                        "  "
+                    } else if next_is_suggestion {
+                        writeln!(output, " option 1")?;
+                        "  "
+                    } else {
+                        " "
+                    };
+
+                    for (i, patch) in spliced_lines.patches.iter().enumerate() {
+                        let (lo, hi) = sm.span_to_locations(patch.span.start..patch.span.end);
 
                         let col = if lo.line == hi.line
                             && let Some(line) = sm.get_line(lo.line)
                             && let Some(pre) = line.get(..lo.byte)
                             && pre.chars().all(|c| c.is_whitespace())
                             && let Some(post) = line.get(hi.byte..)
-                            && (replacement.lines().count() > 1
+                            && (patch.replacement.lines().count() > 1
                                 || post.chars().all(|c| c.is_whitespace()))
                         {
                             // We are changing the whole text in the line, no need to mention the
@@ -278,28 +301,8 @@ pub(crate) fn render_no_graphics(
                             Some(lo.char + 1)
                         };
 
-                        let path: Option<&str> =
-                            match (&suggestion.path, primary_path.or(report_primary_path)) {
-                                (Some(path), Some(primary)) if path != primary => {
-                                    // We only include the file path when it is different to the
-                                    // primary file.
-                                    //
-                                    // `at $DIR/file.txt:LL:CC: label`
-                                    //  ^^^^^^^^^^^^^^^^^
-                                    Some(path)
-                                }
-                                (Some(path), None) => {
-                                    // We only include the file path when it is different to the
-                                    // primary file.
-                                    //
-                                    // `at $DIR/file.txt:LL:CC: label`
-                                    //  ^^^^^^^^^^^^^^^^^
-                                    Some(path)
-                                }
-                                _ => None,
-                            };
+                        write!(output, "{padding}")?;
 
-                        write!(output, " ")?;
                         render_path(
                             &mut output,
                             path,
@@ -307,8 +310,9 @@ pub(crate) fn render_no_graphics(
                             col,
                             renderer.anonymized_origin_line_numbers,
                         )?;
+
                         let add = if let Some(snippet) =
-                            sm.span_to_snippet(first_patch.span.start..first_patch.span.end)
+                            sm.span_to_snippet(patch.span.start..patch.span.end)
                             && snippet.chars().all(|c| c.is_whitespace())
                         {
                             "add"
@@ -316,48 +320,28 @@ pub(crate) fn render_no_graphics(
                             "replace with"
                         };
 
-                        if next_is_suggestion {
-                            // We have multiple suggestions. We will render on their own line, first
-                            // the message, then the position, and finally each of the suggestions.
-                            //
-                            // help: suggestion message
-                            //  at line LL, column CC, add one of
-                            //   first suggestion
-                            //   second suggestion
-                            writeln!(output, " {add} one of:")?;
-                        } else {
-                            // We have a single suggestion. We will render first the message, then
-                            // the position followed by the suggestion on the next line.
-                            //
-                            // help: suggestion message
-                            //  on line LL, column CC, add `addition`
-                            if !replacement.trim().is_empty() {
-                                // If it is a removal, we shorten the output.
-                                //
-                                // help: suggestion message to remove something
-                                //  at line LL, column CC
-                                write!(output, " {add}: ")?;
-                            }
+                        if !patch.replacement.trim().is_empty() {
+                            write!(output, " {add}: ")?;
+                            let st = ElementStyle::Addition
+                                .color_spec(&crate::Level::NOTE, &renderer.stylesheet);
+
+                            write!(
+                                output,
+                                "{st}{}{st:#}",
+                                normalize_whitespace(patch.replacement.trim_end_matches('\n'))
+                            )?;
                         }
-                    }
-
-                    let st = ElementStyle::Addition
-                        .color_spec(&crate::Level::NOTE, &renderer.stylesheet);
-                    if next_is_suggestion || last_suggestion_path.is_some() {
-                        // Multiple suggestions.
-                        writeln!(output, "  {st}{replacement}{st:#}")?;
-                    } else if !replacement.trim().is_empty() {
-                        // Single addition suggestion
-                        write!(output, "{st}{replacement}{st:#}")?;
-
-                        if peek.is_some() {
+                        if i + 1 != spliced_lines.patches.len() {
                             writeln!(output)?;
                         }
-                    } else if peek.is_some() {
+                    }
+                    if peek.is_some() {
                         writeln!(output)?;
                     }
-
-                    last_suggestion_path = Some(suggestion.path.as_ref());
+                    last_suggestion_path = Some((
+                        suggestion.path.as_ref(),
+                        last_suggestion_path.map_or(1, |(_, count)| count + 1),
+                    ));
                 }
                 PreprocessedElement::Origin(origin) => {
                     last_suggestion_path = None;

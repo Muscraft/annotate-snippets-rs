@@ -2015,10 +2015,10 @@ help: you might have meant to use one of the following enum variants
 error E0423: expected value, found enum `A`
  on line 1
 help: you might have meant to use one of the following enum variants
- on line 1, column 5 replace with one of:
-  (A::Tuple())
-  A::Unit
-
+ option 1
+  on line 1, column 5 replace with: (A::Tuple())
+ option 2
+  on line 1, column 6 add: ::Unit
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2119,10 +2119,10 @@ error E0599: no method named `pick` found for struct `Chaenomeles` in the curren
  on line 18, column 25: method not found in `Chaenomeles`
   on line 3: method `pick` not found for this struct
 help: the following traits which provide `pick` are implemented but not in scope; perhaps you want to import one of them
- on line 2, column 1 add one of:
-  use banana::Apple;
-  use banana::Peach;
-
+ option 1
+  on line 2, column 1 add: use banana::Apple;
+ option 2
+  on line 2, column 1 add: use banana::Peach;
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2185,6 +2185,7 @@ error E0423: expected value, found enum `A`
  on line 1
 help: make these changes and things will work
  on line 1, column 5 replace with: (A::Tuple())
+ on line 1, column 7 replace with: bar
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2246,6 +2247,7 @@ error E0423: Found `ThisIsVeryLong`
  on line 1
 help: make these changes and things will work
  on line 1, column 5 replace with: (A::Tuple())
+ on line 1, column 20 replace with: bar
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2358,6 +2360,8 @@ error E0502: cannot borrow `*self` as mutable because it is also borrowed as imm
   on line 6: immutable borrow later used here
 help: try explicitly pass `&Self` into the Closure as an argument
  on line 2, column 14 add: this: &Self
+ on line 3, column 9 replace with: this
+ on line 6, column 7 add: self
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2464,6 +2468,8 @@ error E0499: cannot borrow `chars` as mutable more than once at a time
 help: if you want to call `next` on a iterator within the loop, consider using `while let`
  on line 4, column 5 replace with: let iter = chars.by_ref();
     while let Some(
+ on line 4, column 11 replace with: ) = iter.next()
+ on line 5, column 9 replace with: iter
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2560,7 +2566,7 @@ help: if you import `cell`, refer to it directly
 error E0433: failed to resolve: use of undeclared crate or module `st`
  on line 13, column 10: use of undeclared crate or module `st`
 help: there is a crate or module with a similar name
- on line 13, column 10 replace with: std
+ on line 13, column 12 add: d
 help: consider importing this module
  on line 2, column 1 add: use std::cell;
 help: if you import `cell`, refer to it directly
@@ -2818,6 +2824,7 @@ help: you could relax the implicit `Sized` bound on `T` if it were used through 
   on line 2, column 19: ...if indirection were used here: `Box<T>`
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
  on line 6, column 5
+ on line 10, column 10 add: + Send
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2895,6 +2902,7 @@ help: consider removing the `?Sized` bound to make the type parameter `Sized`
 error E0277: the size for values of type `T` cannot be known at compilation time
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
  on line 8, column 3
+ on line 11, column 4
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5064,7 +5072,7 @@ help: consider specifying the generic argument
 error E0282: type annotations needed
  at $DIR/issue-42234-unknown-receiver-type.rs:12:10: cannot infer type of the type parameter `S` declared on the method `sum`
 help: consider specifying the generic argument
- on line 23, column 13 replace with: ::<_>
+ on line 23, column 18
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5573,14 +5581,8 @@ error E0061: this function takes 6 arguments but 5 arguments were supplied
 note: function defined here
  at $DIR/trimmed_multiline_suggestion.rs:1:4
 help: provide the argument
- on line 5, column 36 replace with: (
-        variable_name,
-        /* char */,
-        variable_name,
-        variable_name,
-        variable_name,
-        variable_name,
-    )
+ on line 7, column 9 add: /* char */,
+        
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(input), expected_no_graphics);
@@ -5695,13 +5697,7 @@ error: consider adding a `;` to the last statement for consistent formatting
 note: the lint level is defined here
  at tests/ui/semicolon_if_nothing_returned_testing.rs:2:9
 help: add a `;` here
- on line 4, column 5 replace with: nums.iter().for_each(|x| {
-        if *x > 0 {
-            println!("Positive number");
-        } else {
-            println!("Negative number");
-        }
-    });
+ on line 10, column 7 add: ;
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(input), expected_no_graphics);
@@ -5812,13 +5808,8 @@ error E0061: this function takes 6 arguments but 5 arguments were supplied
  at $DIR/trimmed_multiline_suggestion.rs:3:5
   on line 5: argument #2 of type `char` is missing
 help: provide the argument
- on line 3, column 36 replace with: (
-        variable_name,
-        /* char */,
-        variable_name,
-        variable_name,
-        variable_name,
-    )
+ on line 5, column 9 add: /* char */,
+        
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(input), expected_no_graphics);
@@ -5984,7 +5975,7 @@ help: consider importing this module instead
     let expected_no_graphics = str![[r#"
  at /tmp/test.rs:1:5: no `sync` in the root
 help: consider importing this module instead
- on line 1, column 5 replace with: std::sync
+ on line 1, column 5 add: std::
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);

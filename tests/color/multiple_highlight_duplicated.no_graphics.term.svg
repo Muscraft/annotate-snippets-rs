@@ -1,4 +1,4 @@
-<svg width="740px" height="254px" xmlns="http://www.w3.org/2000/svg">
+<svg width="740px" height="308px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #AAAAAA }
     .bg { fill: #000000 }
@@ -32,19 +32,25 @@
 </tspan>
     <tspan x="10px" y="118px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove the extra argument</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan> on line 23, column 25 replace with one of:</tspan>
+    <tspan x="10px" y="136px"><tspan> option 1</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan>  </tspan>
+    <tspan x="10px" y="154px"><tspan>  on line 23, column 25</tspan>
 </tspan>
-    <tspan x="10px" y="172px"><tspan>  </tspan>
+    <tspan x="10px" y="172px"><tspan> option 2</tspan>
 </tspan>
-    <tspan x="10px" y="190px"><tspan>  </tspan>
+    <tspan x="10px" y="190px"><tspan>  on line 18, column 2</tspan>
 </tspan>
-    <tspan x="10px" y="208px"><tspan>  </tspan>
+    <tspan x="10px" y="208px"><tspan> option 3</tspan>
 </tspan>
-    <tspan x="10px" y="226px"><tspan>  </tspan>
+    <tspan x="10px" y="226px"><tspan>  on line 18, column 25</tspan>
 </tspan>
-    <tspan x="10px" y="244px">
+    <tspan x="10px" y="244px"><tspan> option 4</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan>  on line 23, column 9</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan> option 5</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>  on line 23, column 25</tspan>
 </tspan>
   </text>
 

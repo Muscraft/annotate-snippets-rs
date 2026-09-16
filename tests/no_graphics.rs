@@ -229,11 +229,14 @@ help: consider importing one of these structs
 error E0425: cannot find type `Iter` in this scope
  at $DIR/missing-type.rs:5:12: not found in this scope
 help: consider importing one of these structs
- on line 4, column 1 add one of:
-  use std::collections::binary_heap::Iter;
-  use std::collections::btree_map::Iter;
-  use std::collections::btree_set::Iter;
-  use std::collections::hash_map::Iter;
+ option 1
+  on line 4, column 1 add: use std::collections::binary_heap::Iter;
+ option 2
+  on line 4, column 1 add: use std::collections::btree_map::Iter;
+ option 3
+  on line 4, column 1 add: use std::collections::btree_set::Iter;
+ option 4
+  on line 4, column 1 add: use std::collections::hash_map::Iter;
 and 9 other candidates
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
@@ -497,6 +500,7 @@ error: mismatched types
  at file.rs:1:5: expected `u8`
 help: convert both operands
  on line 1, column 5 replace with: u8::from(value)
+ on line 1, column 14 add: u8
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -554,10 +558,10 @@ help: consider importing this struct
 error: cannot find type `Iter`
  at a.rs:1:20: not found in this scope
 help: consider importing this struct
- at b.rs:1:1 add one of:
-  use std::slice::Iter;
-  use std::slice::Iter;
-
+ option 1
+  at b.rs:1:1 add: use std::slice::Iter;
+ option 2
+  at c.rs:1:1 add: use std::slice::Iter;
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -605,13 +609,16 @@ fn alternatives_return_to_primary_path() {
 error: invalid value
  at a.rs:1:1
 help: replace the value
- on line 1 replace with one of:
-  other
-  other
-  other
-  other
-  other
-
+ option 1
+  on line 1 replace with: other
+ option 2
+  at b.rs:1 replace with: other
+ option 3
+  on line 1 replace with: other
+ option 4
+  on line 1 replace with: other
+ option 5
+  on line 1 replace with: other
 "#]];
     for decor_style in [DecorStyle::Ascii, DecorStyle::Unicode] {
         let renderer = Renderer::plain().decor_style(decor_style).no_graphics(true);
@@ -654,7 +661,7 @@ help: convert it
 error: mismatched types
  at file.rs:1:6: expected `u8`
 help: convert it
- on line 1, column 6 replace with: arg.into()
+ on line 1, column 9 add: .into()
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -881,10 +888,10 @@ help: change either declaration
 
     let expected_no_graphics = str![[r#"
 help: change either declaration
- at file.rs:1 replace with one of:
-  x
-  y
-
+ option 1
+  at file.rs:1 replace with: x
+ option 2
+  on line 2, column 1 replace with: y
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -996,9 +1003,7 @@ fn alternative_patch_replacement_normalizes_bidi_controls() {
         expected_ascii
     );
 
-    let expected_no_graphics = str![[
-        r#""help: change the value\n at file.rs:1 replace with one of:\n  �value�\n  other\n""#
-    ]]
+    let expected_no_graphics = str![[r#""help: change the value\n option 1\n  at file.rs:1 replace with: �value�\n option 2\n  on line 1 replace with: other""#]]
     .raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(

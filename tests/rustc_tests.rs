@@ -3545,7 +3545,7 @@ error E0532: expected unit struct, unit variant or constant, found tuple variant
  at $DIR/auxiliary/declarations-for-tuple-field-count-errors.rs:11:15: similarly named unit variant `Z0` defined here
   on line 11, column 19: `E1::Z1` defined here
 help: use the tuple variant pattern syntax instead
- on line 35, column 9 replace with: E1::Z1()
+ on line 35, column 15 add: ()
 help: a unit variant with a similar name exists
  on line 35, column 13 replace with: Z0
 "#]];
@@ -4011,6 +4011,7 @@ note: the lint level is defined here
  at $DIR/diagnostic-width.rs:2:9
 help: use an automatic link instead
  on line 4, column 41 add: <
+ on line 4, column 56 add: >
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4116,6 +4117,7 @@ help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
  on line 3, column 11 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
  on line 3, column 1 add: IntoIterator::into_iter(
+ on line 3, column 10 replace with: )
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5677,11 +5679,14 @@ help: consider importing one of these structs
 error E0433: failed to resolve: use of undeclared type `IntoIter`
  at $DIR/issue-82956.rs:25:24: use of undeclared type `IntoIter`
 help: consider importing one of these structs
- on line 4, column 1 add one of:
-  use std::array::IntoIter;
-  use std::collections::binary_heap::IntoIter;
-  use std::collections::btree_map::IntoIter;
-  use std::collections::btree_set::IntoIter;
+ option 1
+  on line 4, column 1 add: use std::array::IntoIter;
+ option 2
+  on line 4, column 1 add: use std::collections::binary_heap::IntoIter;
+ option 3
+  on line 4, column 1 add: use std::collections::btree_map::IntoIter;
+ option 4
+  on line 4, column 1 add: use std::collections::btree_set::IntoIter;
 and 9 other candidates
 "#]];
     let renderer = renderer.no_graphics(true);
@@ -5838,13 +5843,17 @@ error E0423: expected function, tuple struct or tuple variant, found struct `std
  at $SRC_DIR/std/src/collections/hash/map.rs:242:0
  note: `std::collections::HashMap` defined here
 help: you might have meant to use an associated function to build this type
- on line 17, column 38 replace with one of:
-  ::new()
-  ::with_capacity(_)
-  ::with_hasher(_)
-  ::with_capacity_and_hasher(_, _)
+ option 1
+  on line 17, column 38 add: ::new
+ option 2
+  on line 17, column 38 replace with: ::with_capacity(_)
+ option 3
+  on line 17, column 38 replace with: ::with_hasher(_)
+ option 4
+  on line 17, column 38 replace with: ::with_capacity_and_hasher(_, _)
 help: consider using the `Default` trait
  on line 17, column 13 add: <
+ on line 17, column 38 add:  as std::default::Default>::default
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6047,14 +6056,18 @@ note: constructor is not visible here due to private fields
  note: private field
  note: private field
 help: you might have meant to use an associated function to build this type
- on line 11, column 22 replace with one of:
-  ::new(_)
-  ::new_uninit()
-  ::new_zeroed()
-  ::new_in(_, _)
+ option 1
+  on line 11, column 22 replace with: ::new(_)
+ option 2
+  on line 11, column 22 replace with: ::new_uninit()
+ option 3
+  on line 11, column 22 replace with: ::new_zeroed()
+ option 4
+  on line 11, column 22 replace with: ::new_in(_, _)
 and 12 other candidates
 help: consider using the `Default` trait
  on line 11, column 19 add: <
+ on line 11, column 22 replace with:  as std::default::Default>::default()
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6192,11 +6205,14 @@ error E0599: no method named `bar` found for struct `Thing` in the current scope
  at $DIR/too-many-field-suggestions.rs:25:7: method not found in `Thing`
   on line 1: method `bar` not found for this struct
 help: some of the expressions' fields have a method of the same name
- on line 25, column 7 add one of:
-  a0.
-  a1.
-  a2.
-  a3.
+ option 1
+  on line 25, column 7 add: a0.
+ option 2
+  on line 25, column 7 add: a1.
+ option 3
+  on line 25, column 7 add: a2.
+ option 4
+  on line 25, column 7 add: a3.
 and 6 other candidates
 "#]];
     let renderer = renderer.no_graphics(true);
@@ -6558,6 +6574,8 @@ note: associated function defined here
  at $SRC_DIR/alloc/src/string.rs:480:11
 help: remove the extra arguments
  on line 4, column 5 replace with: /* usize */
+ on line 4, column 20
+ on line 7, column 3
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -6649,6 +6667,7 @@ error: these match arms have identical bodies
  help: if this is unintentional make the arms return different values
 help: otherwise remove the non-wildcard arms
  on line 20, column 9
+ on line 21, column 9
 "#]];
     let renderer_no_graphics = renderer_unicode.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
