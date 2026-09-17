@@ -966,7 +966,7 @@ fn patch_replacement_escapes_terminal_controls() {
     );
 
     let expected_no_graphics =
-        str![[r#""help: change the value\n at file.rs:1 replace with: \u{1b}[2Jvalue""#]].raw();
+        str![[r#""help: change the value\n at file.rs:1 replace with: ␛[2Jvalue""#]].raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(
         format!("{:?}", renderer_no_graphics.render(report)),
@@ -996,7 +996,10 @@ fn alternative_patch_replacement_normalizes_bidi_controls() {
         expected_ascii
     );
 
-    let expected_no_graphics = str![[r#""help: change the value\n at file.rs:1 replace with one of:\n  \u{202e}value\u{202c}\n  other\n""#]].raw();
+    let expected_no_graphics = str![[
+        r#""help: change the value\n at file.rs:1 replace with one of:\n  �value�\n  other\n""#
+    ]]
+    .raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(
         format!("{:?}", renderer_no_graphics.render(report)),

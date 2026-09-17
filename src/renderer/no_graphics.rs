@@ -233,7 +233,8 @@ pub(crate) fn render_no_graphics(
                     let next_is_suggestion =
                         matches!(peek, Some(PreprocessedElement::Suggestion(_)));
 
-                    let replacement = first_patch.replacement.trim_end_matches('\n');
+                    let replacement =
+                        normalize_whitespace(first_patch.replacement.trim_end_matches('\n'));
                     if last_suggestion_path.is_none() {
                         let (lo, hi) =
                             sm.span_to_locations(first_patch.span.start..first_patch.span.end);
