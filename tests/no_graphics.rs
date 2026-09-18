@@ -843,7 +843,7 @@ error: mismatched types
 
     let expected_no_graphics = str![[r#"
 error: mismatched types
- at $DIR/file.rs:2:10: expected `u8`
+ at $DIR/file.rs:LL:10: expected `u8`
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);

@@ -25,7 +25,7 @@ use crate::{
     Annotation, AnnotationKind, Element, Group, Message, Origin, Patch, Report, Snippet, Title,
 };
 
-const ANONYMIZED_LINE_NUM: &str = "LL";
+pub(crate) const ANONYMIZED_LINE_NUM: &str = "LL";
 
 pub(crate) fn render(renderer: &Renderer, groups: Report<'_>) -> String {
     if renderer.short_message {

@@ -1,11 +1,13 @@
-use alloc::borrow::Cow;
-use alloc::{string::String, vec::Vec};
+use alloc::borrow::{Cow, ToOwned};
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use core::cmp::Reverse;
 use core::fmt::{self, Write};
 
 use super::graphics::{Hyperlink, MessageOrTitle, TitleStyle, str_width};
 use super::preprocess::{Preprocessed, PreprocessedElement, PreprocessedGroup};
 use super::{ElementStyle, Stylesheet, normalize_whitespace};
+use crate::renderer::graphics::ANONYMIZED_LINE_NUM;
 use crate::{AnnotationKind, Id, Renderer, Report};
 
 /// Print out a file position optimized for the data available.
@@ -18,7 +20,16 @@ fn render_path(
     path: Option<&str>,
     line: Option<usize>,
     col: Option<usize>,
+    anonymized_origin_line_numbers: bool,
 ) -> Result<(), fmt::Error> {
+    let line = line.map(|l| {
+        if anonymized_origin_line_numbers {
+            ANONYMIZED_LINE_NUM.to_owned()
+        } else {
+            l.to_string()
+        }
+    });
+
     match (path, line, col) {
         (Some(path), Some(line), Some(col)) => {
             // `at $DIR/file.txt:LL:CC`
@@ -146,6 +157,7 @@ pub(crate) fn render_no_graphics(
                             snippet.path.as_deref(),
                             Some(snippet.line_start),
                             None,
+                            renderer.anonymized_origin_line_numbers,
                         )?;
                         if peek.is_some() {
                             writeln!(output)?;
@@ -174,7 +186,13 @@ pub(crate) fn render_no_graphics(
                         {
                             // `at $DIR/file.txt:LL:CC: label`
                             //  ^^^^^^^^^^^^^^^^^^^^^^
-                            render_path(&mut output, Some(path), Some(lo.line), Some(lo.char + 1))?;
+                            render_path(
+                                &mut output,
+                                Some(path),
+                                Some(lo.line),
+                                Some(lo.char + 1),
+                                renderer.anonymized_origin_line_numbers,
+                            )?;
                             if lo.line != hi.line {
                                 // This is a multiline highlight, so we mention both the start and the
                                 // end. `LL:CC to MM:DD`
@@ -191,7 +209,13 @@ pub(crate) fn render_no_graphics(
                             } else {
                                 Some(lo.char + 1)
                             };
-                            render_path(&mut output, None, Some(lo.line), col)?;
+                            render_path(
+                                &mut output,
+                                None,
+                                Some(lo.line),
+                                col,
+                                renderer.anonymized_origin_line_numbers,
+                            )?;
                             if lo.line != hi.line {
                                 // This is a multiline highlight, so we mention both the start and the
                                 // end. `line LL, column CC to line MM, column DD`
@@ -276,7 +300,13 @@ pub(crate) fn render_no_graphics(
                             };
 
                         write!(output, " ")?;
-                        render_path(&mut output, path, Some(lo.line), col)?;
+                        render_path(
+                            &mut output,
+                            path,
+                            Some(lo.line),
+                            col,
+                            renderer.anonymized_origin_line_numbers,
+                        )?;
                         let add = if let Some(snippet) =
                             sm.span_to_snippet(first_patch.span.start..first_patch.span.end)
                             && snippet.chars().all(|c| c.is_whitespace())
@@ -337,6 +367,7 @@ pub(crate) fn render_no_graphics(
                         Some(&origin.path),
                         origin.line,
                         origin.char_column,
+                        renderer.anonymized_origin_line_numbers,
                     )?;
                     if peek.is_some() {
                         writeln!(output)?;
