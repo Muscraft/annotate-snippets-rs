@@ -5499,3 +5499,90 @@ fn wide_chars_in_level_name() {
     let renderer = renderer.decor_style(DecorStyle::Unicode);
     assert_data_eq!(renderer.render(report), expected_unicode);
 }
+
+#[test]
+fn annotate_start_long_whitespace() {
+    let source = r#"                                         fn main() {              return;              }
+"#;
+
+    let report = &[
+        Group::with_title(Level::ERROR.primary_title("unknown start of token: \u{a0}")).element(
+            Snippet::source(source)
+                .path("$DIR/emitter-overflow-bad-whitespace.rs")
+                .line_start(10)
+                .annotation(AnnotationKind::Primary.span(0..2)),
+        ),
+    ];
+    let expected_ascii = str![[r#"
+error: unknown start of token:  
+  --> $DIR/emitter-overflow-bad-whitespace.rs:10:1
+   |
+10 | ...                   fn main() {              return;              }
+^  |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_unicode = str![[r#"
+error: unknown start of token:  
+   ╭▸ $DIR/emitter-overflow-bad-whitespace.rs:10:1
+   │
+10 │ …                     fn main() {              return;              }
+━  ╰╴
+"#]];
+    let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
+    assert_data_eq!(renderer_unicode.render(report), expected_unicode);
+}
+
+#[test]
+fn annotate_middle_long_whitespace() {
+    let source = r#"                                                                                abc
+"#;
+
+    let report = &[Group::with_level(Level::ERROR)
+        .element(Snippet::source(source).annotation(AnnotationKind::Primary.span(30..31)))];
+
+    let expected_ascii = str![[r#"
+  |
+1 | ...                   abc
+^ |
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_unicode = str![[r#"
+  ╭▸ 
+1 │ …                     abc
+━ ╰╴
+"#]];
+    let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
+    assert_data_eq!(renderer_unicode.render(report), expected_unicode);
+}
+
+#[test]
+fn annotate_start_long_whitespace_and_text_after() {
+    let source = r#"                                                                                abc
+"#;
+
+    let report = &[Group::with_level(Level::ERROR).element(
+        Snippet::source(source)
+            .annotation(AnnotationKind::Primary.span(0..1))
+            .annotation(AnnotationKind::Context.span(80..83)),
+    )];
+
+    let expected_ascii = str![[r#"
+  |
+1 | ...                   abc
+^ |                       ---
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_unicode = str![[r#"
+  ╭▸ 
+1 │ …                     abc
+━ ╰╴                      ───
+"#]];
+    let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
+    assert_data_eq!(renderer_unicode.render(report), expected_unicode);
+}
