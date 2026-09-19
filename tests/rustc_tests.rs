@@ -5911,3 +5911,272 @@ help: otherwise remove the non-wildcard arms
     let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
     assert_data_eq!(renderer_unicode.render(report), expected_unicode);
 }
+
+#[test]
+fn trim_long_whitespace_in_multiline_annotations() {
+    // tests/ui/attributes/dump_def_parents.rs
+    let source = r#"
+#![feature(rustc_attrs)]
+
+fn bar() {
+    fn foo() {
+        #[rustc_dump_def_parents]
+        fn baz() {
+            || {
+                qux::<
+                    {
+                        fn inhibits_dump() {
+                            qux::<
+                                {
+                                    "hi";
+                                    1
+                                },
+                            >();
+                        }
+
+                        qux::<{ 1 + 1 }>();
+                        1
+                    },
+                >();
+            };
+        }
+    }
+}
+
+const fn qux<const N: usize>() {}
+
+fn main() {}
+"#;
+    let path = "$DIR/dump_def_parents.rs";
+
+    let report: &[Group<'_>] = &[
+        Group::with_title(Level::ERROR.primary_title("rustc_dump_def_parents: DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(280..395)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(192..210)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(166..548)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(118..120)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(95..103)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(42..50)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(27..35)),
+        ),
+        Group::with_title(Level::NOTE.secondary_title("DefId(..)")).element(
+            Snippet::source(source)
+                .path(path)
+                .annotation(AnnotationKind::Primary.span(1..652)),
+        ),
+    ];
+
+    let expected_ascii = str![[r#"
+error: rustc_dump_def_parents: DefId(..)
+  --> $DIR/dump_def_parents.rs:13:33
+   |
+13 | / ...                   {
+14 | | ...                       "hi";
+15 | | ...                       1
+16 | | ...                   },
+   | |_______________________^
+   |
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:11:25
+   |
+11 |                         fn inhibits_dump() {
+   |                         ^^^^^^^^^^^^^^^^^^
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:10:21
+   |
+10 | /                     {
+11 | |                         fn inhibits_dump() {
+12 | |                             qux::<
+...  |
+21 | |                         1
+22 | |                     },
+   | |_____________________^
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:8:13
+   |
+ 8 |             || {
+   |             ^^
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:7:9
+   |
+ 7 |         fn baz() {
+   |         ^^^^^^^^
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:5:5
+   |
+ 5 |     fn foo() {
+   |     ^^^^^^^^
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:4:1
+   |
+ 4 | fn bar() {
+   | ^^^^^^^^
+note: DefId(..)
+  --> $DIR/dump_def_parents.rs:2:1
+   |
+ 2 | / #![feature(rustc_attrs)]
+ 3 | |
+ 4 | | fn bar() {
+ 5 | |     fn foo() {
+...  |
+31 | | fn main() {}
+   | |____________^
+"#]];
+    let renderer_ascii = Renderer::plain();
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_unicode = str![[r#"
+error: rustc_dump_def_parents: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:13:33
+   │
+13 │ ┏ …                     {
+14 │ ┃ …                         "hi";
+15 │ ┃ …                         1
+16 │ ┃ …                     },
+   │ ┗━━━━━━━━━━━━━━━━━━━━━━━┛
+   ╰╴
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:11:25
+   │
+11 │                         fn inhibits_dump() {
+   ╰╴                        ━━━━━━━━━━━━━━━━━━
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:10:21
+   │
+10 │ ┏                     {
+11 │ ┃                         fn inhibits_dump() {
+12 │ ┃                             qux::<
+   ┆ ┇
+21 │ ┃                         1
+22 │ ┃                     },
+   ╰╴┗━━━━━━━━━━━━━━━━━━━━━┛
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:8:13
+   │
+ 8 │             || {
+   ╰╴            ━━
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:7:9
+   │
+ 7 │         fn baz() {
+   ╰╴        ━━━━━━━━
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:5:5
+   │
+ 5 │     fn foo() {
+   ╰╴    ━━━━━━━━
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:4:1
+   │
+ 4 │ fn bar() {
+   ╰╴━━━━━━━━
+note: DefId(..)
+   ╭▸ $DIR/dump_def_parents.rs:2:1
+   │
+ 2 │ ┏ #![feature(rustc_attrs)]
+ 3 │ ┃
+ 4 │ ┃ fn bar() {
+ 5 │ ┃     fn foo() {
+   ┆ ┇
+31 │ ┃ fn main() {}
+   ╰╴┗━━━━━━━━━━━━┛
+"#]];
+    let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
+    assert_data_eq!(renderer_unicode.render(report), expected_unicode);
+}
+
+#[test]
+fn multiline_annotation_with_long_label_in_narrow_terminal() {
+    // tests/ui/diagnostic-width/long-E0308.rs
+    let source = r#"
+    ))))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+        Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(
+            Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+        ))))))))))))))))))))))))))))))
+    ))))))))))))))))))))))));
+"#;
+    let label = "expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`";
+    let title_0 = "expected enum `Option<Result<Option...>>>>>>, _>>`\n   found enum `Result<Result..._>, _>, _>`";
+    let title_1 = "the full name for the type has been written to '$TEST_BUILD_DIR/long-E0308.long-type-$LONG_TYPE_HASH.txt'";
+
+    let report: &[Group<'_>] =
+        &[
+            Group::with_title(Level::ERROR.primary_title("mismatched types").id("E0308"))
+                .element(
+                    Snippet::source(source)
+                        .path("$DIR/long-E0308.rs")
+                        .line_start(57)
+                        .annotation(AnnotationKind::Primary.span(26..308).label(label)),
+                )
+                .element(Level::NOTE.message(title_0))
+                .element(Level::NOTE.message(title_1))
+                .element(Level::NOTE.message(
+                    "consider using `--verbose` to print the full type name to the console",
+                )),
+        ];
+    let expected_ascii = str![[r#"
+error[E0308]: mismatched types
+  --> $DIR/long-E0308.rs:58:26
+   |
+58 |       ))))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(O...
+   |  __________________________^
+59 | |         Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(...
+60 | |             Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+61 | |         ))))))))))))))))))))))))))))))
+62 | |     ))))))))))))))))))))))));
+   | |____________________________^ expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`
+   |
+   = note: expected enum `Option<Result<Option...>>>>>>, _>>`
+              found enum `Result<Result..._>, _>, _>`
+   = note: the full name for the type has been written to '$TEST_BUILD_DIR/long-E0308.long-type-$LONG_TYPE_HASH.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+"#]];
+    let renderer_ascii = Renderer::plain().term_width(60);
+    assert_data_eq!(renderer_ascii.render(report), expected_ascii);
+
+    let expected_unicode = str![[r#"
+error[E0308]: mismatched types
+   ╭▸ $DIR/long-E0308.rs:58:26
+   │
+58 │       ))))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(…
+   │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+59 │ ┃         Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok…
+60 │ ┃             Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+61 │ ┃         ))))))))))))))))))))))))))))))
+62 │ ┃     ))))))))))))))))))))))));
+   │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`
+   │
+   ├ note: expected enum `Option<Result<Option...>>>>>>, _>>`
+   │          found enum `Result<Result..._>, _>, _>`
+   ├ note: the full name for the type has been written to '$TEST_BUILD_DIR/long-E0308.long-type-$LONG_TYPE_HASH.txt'
+   ╰ note: consider using `--verbose` to print the full type name to the console
+"#]];
+    let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
+    assert_data_eq!(renderer_unicode.render(report), expected_unicode);
+}
