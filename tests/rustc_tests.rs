@@ -5996,11 +5996,11 @@ fn main() {}
 error: rustc_dump_def_parents: DefId(..)
   --> $DIR/dump_def_parents.rs:13:33
    |
-13 | / ...                   {
-14 | | ...                       "hi";
-15 | | ...                       1
-16 | | ...                   },
-   | |_______________________^
+13 | /                                 {
+14 | |                                     "hi";
+15 | |                                     1
+16 | |                                 },
+   | |_________________________________^
    |
 note: DefId(..)
   --> $DIR/dump_def_parents.rs:11:25
@@ -6055,11 +6055,11 @@ note: DefId(..)
 error: rustc_dump_def_parents: DefId(..)
    ╭▸ $DIR/dump_def_parents.rs:13:33
    │
-13 │ ┏ …                     {
-14 │ ┃ …                         "hi";
-15 │ ┃ …                         1
-16 │ ┃ …                     },
-   │ ┗━━━━━━━━━━━━━━━━━━━━━━━┛
+13 │ ┏                                 {
+14 │ ┃                                     "hi";
+15 │ ┃                                     1
+16 │ ┃                                 },
+   │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
    ╰╴
 note: DefId(..)
    ╭▸ $DIR/dump_def_parents.rs:11:25

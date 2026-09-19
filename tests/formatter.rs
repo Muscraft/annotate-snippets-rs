@@ -5517,8 +5517,8 @@ fn annotate_start_long_whitespace() {
 error: unknown start of token:  
   --> $DIR/emitter-overflow-bad-whitespace.rs:10:1
    |
-10 | ...                   fn main() {              return;              }
-^  |
+10 |                                          fn main() {              return;              }
+   | ^
 "#]];
     let renderer_ascii = Renderer::plain();
     assert_data_eq!(renderer_ascii.render(report), expected_ascii);
@@ -5527,8 +5527,8 @@ error: unknown start of token:  
 error: unknown start of token:  
    ╭▸ $DIR/emitter-overflow-bad-whitespace.rs:10:1
    │
-10 │ …                     fn main() {              return;              }
-━  ╰╴
+10 │                                          fn main() {              return;              }
+   ╰╴━
 "#]];
     let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
     assert_data_eq!(renderer_unicode.render(report), expected_unicode);
@@ -5544,16 +5544,16 @@ fn annotate_middle_long_whitespace() {
 
     let expected_ascii = str![[r#"
   |
-1 | ...                   abc
-^ |
+1 | ...                                                                     abc
+  |                       ^
 "#]];
     let renderer_ascii = Renderer::plain();
     assert_data_eq!(renderer_ascii.render(report), expected_ascii);
 
     let expected_unicode = str![[r#"
   ╭▸ 
-1 │ …                     abc
-━ ╰╴
+1 │ …                                                                       abc
+  ╰╴                      ━
 "#]];
     let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
     assert_data_eq!(renderer_unicode.render(report), expected_unicode);
@@ -5572,16 +5572,16 @@ fn annotate_start_long_whitespace_and_text_after() {
 
     let expected_ascii = str![[r#"
   |
-1 | ...                   abc
-^ |                       ---
+1 |                                                                                 abc
+  | ^                                                                               ---
 "#]];
     let renderer_ascii = Renderer::plain();
     assert_data_eq!(renderer_ascii.render(report), expected_ascii);
 
     let expected_unicode = str![[r#"
   ╭▸ 
-1 │ …                     abc
-━ ╰╴                      ───
+1 │                                                                                 abc
+  ╰╴━                                                                               ───
 "#]];
     let renderer_unicode = renderer_ascii.decor_style(DecorStyle::Unicode);
     assert_data_eq!(renderer_unicode.render(report), expected_unicode);
