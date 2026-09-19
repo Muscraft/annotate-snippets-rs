@@ -5996,11 +5996,11 @@ fn main() {}
 error: rustc_dump_def_parents: DefId(..)
   --> $DIR/dump_def_parents.rs:13:33
    |
-13 | /                                 {
-14 | |                                     "hi";
-15 | |                                     1
-16 | |                                 },
-   | |_________________________________^
+13 | / ...                   {
+14 | | ...                       "hi";
+15 | | ...                       1
+16 | | ...                   },
+   | |_______________________^
    |
 note: DefId(..)
   --> $DIR/dump_def_parents.rs:11:25
@@ -6055,11 +6055,11 @@ note: DefId(..)
 error: rustc_dump_def_parents: DefId(..)
    ╭▸ $DIR/dump_def_parents.rs:13:33
    │
-13 │ ┏                                 {
-14 │ ┃                                     "hi";
-15 │ ┃                                     1
-16 │ ┃                                 },
-   │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+13 │ ┏ …                     {
+14 │ ┃ …                         "hi";
+15 │ ┃ …                         1
+16 │ ┃ …                     },
+   │ ┗━━━━━━━━━━━━━━━━━━━━━━━┛
    ╰╴
 note: DefId(..)
    ╭▸ $DIR/dump_def_parents.rs:11:25
@@ -6144,13 +6144,13 @@ fn multiline_annotation_with_long_label_in_narrow_terminal() {
 error[E0308]: mismatched types
   --> $DIR/long-E0308.rs:58:26
    |
-58 |       ))))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(O...
-   |  __________________________^
-59 | |         Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(...
-60 | |             Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
-61 | |         ))))))))))))))))))))))))))))))
-62 | |     ))))))))))))))))))))))));
-   | |____________________________^ expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`
+58 |   ...))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(...
+   |  _____________________^
+59 | | ...Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok...
+60 | | ...    Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+61 | | ...))))))))))))))))))))))))))))))
+62 | | ...))))))))))))))))))));
+   | |_______________________^ expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`
    |
    = note: expected enum `Option<Result<Option...>>>>>>, _>>`
               found enum `Result<Result..._>, _>, _>`
@@ -6164,13 +6164,13 @@ error[E0308]: mismatched types
 error[E0308]: mismatched types
    ╭▸ $DIR/long-E0308.rs:58:26
    │
-58 │       ))))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(…
-   │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-59 │ ┃         Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok…
-60 │ ┃             Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
-61 │ ┃         ))))))))))))))))))))))))))))))
-62 │ ┃     ))))))))))))))))))))))));
-   │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`
+58 │   …))))))))))))))) == Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok…
+   │ ┏━━━━━━━━━━━━━━━━━━━━━┛
+59 │ ┃ …  Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(Ok(O…
+60 │ ┃ …      Ok(Ok(Ok(Ok(Ok(Ok(Ok("")))))))
+61 │ ┃ …  ))))))))))))))))))))))))))))))
+62 │ ┃ …))))))))))))))))))))));
+   │ ┗━━━━━━━━━━━━━━━━━━━━━━━┛ expected `Option<Result<Option<Option<_>>, _>>`, found `Result<Result<Result<_, _>, _>, _>`
    │
    ├ note: expected enum `Option<Result<Option...>>>>>>, _>>`
    │          found enum `Result<Result..._>, _>, _>`
