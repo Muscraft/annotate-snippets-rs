@@ -679,6 +679,12 @@ fn render_snippet_annotations(
     let mut span_left_margin = usize::MAX;
     for line_info in annotated_lines {
         for ann in &line_info.annotations {
+            // The spans from `LineAnnotationType::MultilineLine` are always
+            // zero, which leads to incorrect calculation of the left margin,
+            // so we skip them here.
+            if matches!(ann.annotation_type, LineAnnotationType::MultilineLine(_)) {
+                continue;
+            }
             span_left_margin = min(span_left_margin, ann.start.display);
             span_left_margin = min(span_left_margin, ann.end.display);
         }

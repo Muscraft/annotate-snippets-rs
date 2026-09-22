@@ -32,6 +32,16 @@ impl Margin {
         term_width: usize,
         max_line_len: usize,
     ) -> Self {
+        // `whitespace_left` should really be thought of as any whitespace
+        // before of the left-most span. This makes it so we don't try and trim
+        // an annotation that is annotating whitespace.
+        // ```
+        //   |
+        // 1 |             x
+        //   |    ^
+        //```
+        let whitespace_left = min(whitespace_left, span_left);
+
         // The 6 is padding to give a bit of room for `...` when displaying:
         // ```
         // error: message
