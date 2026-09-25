@@ -499,7 +499,7 @@ help: convert both operands
 error: mismatched types
  at file.rs:1:5: expected `u8`
 help: convert both operands
- on line 1, column 5 replace with: u8::from(value)
+ on line 1, column 5 to column 10 replace with: u8::from(value)
  on line 1, column 14 add: u8
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
@@ -610,15 +610,15 @@ error: invalid value
  at a.rs:1:1
 help: replace the value
  option 1
-  on line 1 replace with: other
+  on line 1, column 1 to column 6 replace with: other
  option 2
-  at b.rs:1 replace with: other
+  at b.rs:1:1 to column 6 replace with: other
  option 3
-  on line 1 replace with: other
+  on line 1, column 1 to column 6 replace with: other
  option 4
-  on line 1 replace with: other
+  on line 1, column 1 to column 6 replace with: other
  option 5
-  on line 1 replace with: other
+  on line 1, column 1 to column 6 replace with: other
 "#]];
     for decor_style in [DecorStyle::Ascii, DecorStyle::Unicode] {
         let renderer = Renderer::plain().decor_style(decor_style).no_graphics(true);
@@ -735,8 +735,8 @@ help: rename one of these
 
     let expected_no_graphics = str![[r#"
 help: rename one of these
- at file.rs:1:4 replace with: a
- at file.rs:1:4 replace with: b
+ at file.rs:1:4 to column 5 replace with: a
+ at file.rs:1:4 to column 5 replace with: b
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -889,9 +889,9 @@ help: change either declaration
     let expected_no_graphics = str![[r#"
 help: change either declaration
  option 1
-  at file.rs:1 replace with: x
+  at file.rs:1:1 to column 6 replace with: x
  option 2
-  on line 2, column 1 replace with: y
+  on line 2, column 1 to column 7 replace with: y
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(renderer_no_graphics.render(report), expected_no_graphics);
@@ -948,7 +948,7 @@ help: replace the suffix
 
     let expected_no_graphics = str![[r#"
 help: replace the suffix
- at file.rs:1:4 replace with: first
+ at file.rs:1:4 to column 7 replace with: first
 second
 "#]];
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
@@ -973,7 +973,8 @@ fn patch_replacement_escapes_terminal_controls() {
     );
 
     let expected_no_graphics =
-        str![[r#""help: change the value\n at file.rs:1 replace with: ␛[2Jvalue""#]].raw();
+        str![[r#""help: change the value\n at file.rs:1:1 to column 4 replace with: ␛[2Jvalue""#]]
+            .raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(
         format!("{:?}", renderer_no_graphics.render(report)),
@@ -1003,7 +1004,7 @@ fn alternative_patch_replacement_normalizes_bidi_controls() {
         expected_ascii
     );
 
-    let expected_no_graphics = str![[r#""help: change the value\n option 1\n  at file.rs:1 replace with: �value�\n option 2\n  on line 1 replace with: other""#]]
+    let expected_no_graphics = str![[r#""help: change the value\n option 1\n  at file.rs:1:1 to column 4 replace with: �value�\n option 2\n  on line 1, column 1 to column 4 replace with: other""#]]
     .raw();
     let renderer_no_graphics = renderer_ascii.no_graphics(true);
     assert_data_eq!(

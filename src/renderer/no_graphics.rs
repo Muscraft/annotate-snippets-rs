@@ -290,42 +290,56 @@ pub(crate) fn render_no_graphics(
                     for (i, patch) in spliced_lines.patches.iter().enumerate() {
                         let (lo, hi) = sm.span_to_locations(patch.span.start..patch.span.end);
 
-                        let col = if lo.line == hi.line
-                            && let Some(line) = sm.get_line(lo.line)
-                            && let Some(pre) = line.get(..lo.byte)
-                            && pre.chars().all(|c| c.is_whitespace())
-                            && let Some(post) = line.get(hi.byte..)
-                            && (patch.replacement.lines().count() > 1
-                                || post.chars().all(|c| c.is_whitespace()))
-                        {
-                            // We are changing the whole text in the line, no need to mention the
-                            // column.
-                            None
-                        } else {
-                            Some(lo.char + 1)
-                        };
-
+                        let has_replacement = !patch.replacement.trim().is_empty();
+                        let is_addition = patch.is_addition(&sm);
                         write!(output, "{padding}")?;
 
-                        render_path(
-                            &mut output,
-                            path,
-                            Some(lo.line),
-                            col,
-                            renderer.anonymized_origin_line_numbers,
-                        )?;
-
-                        let add = if let Some(snippet) =
-                            sm.span_to_snippet(patch.span.start..patch.span.end)
-                            && snippet.chars().all(|c| c.is_whitespace())
-                        {
-                            "add"
+                        if has_replacement && !is_addition {
+                            render_path(
+                                &mut output,
+                                path,
+                                Some(lo.line),
+                                Some(lo.char + 1),
+                                renderer.anonymized_origin_line_numbers,
+                            )?;
+                            if lo.line != hi.line {
+                                let line = if renderer.anonymized_origin_line_numbers {
+                                    ANONYMIZED_LINE_NUM.to_owned()
+                                } else {
+                                    hi.line.to_string()
+                                };
+                                write!(output, " to line {line}, column {}", hi.char + 1)?;
+                            } else {
+                                write!(output, " to column {}", hi.char + 1)?;
+                            }
                         } else {
-                            "replace with"
-                        };
+                            let col = if lo.line == hi.line
+                                && let Some(line) = sm.get_line(lo.line)
+                                && let Some(pre) = line.get(..lo.byte)
+                                && pre.chars().all(|c| c.is_whitespace())
+                                && let Some(post) = line.get(hi.byte..)
+                                && (patch.replacement.lines().count() > 1
+                                    || post.chars().all(|c| c.is_whitespace()))
+                            {
+                                // We are changing the whole text in the line, no need to mention the
+                                // column.
+                                None
+                            } else {
+                                Some(lo.char + 1)
+                            };
+                            render_path(
+                                &mut output,
+                                path,
+                                Some(lo.line),
+                                col,
+                                renderer.anonymized_origin_line_numbers,
+                            )?;
+                        }
 
-                        if !patch.replacement.trim().is_empty() {
-                            write!(output, " {add}: ")?;
+                        if has_replacement {
+                            let action = if is_addition { "add" } else { "replace with" };
+                            write!(output, " {action}: ")?;
+
                             let st = ElementStyle::Addition
                                 .color_spec(&crate::Level::NOTE, &renderer.stylesheet);
 

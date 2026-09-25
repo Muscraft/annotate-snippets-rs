@@ -2016,7 +2016,7 @@ error E0423: expected value, found enum `A`
  on line 1
 help: you might have meant to use one of the following enum variants
  option 1
-  on line 1, column 5 replace with: (A::Tuple())
+  on line 1, column 5 to column 6 replace with: (A::Tuple())
  option 2
   on line 1, column 6 add: ::Unit
 "#]];
@@ -2184,8 +2184,8 @@ help: make these changes and things will work
 error E0423: expected value, found enum `A`
  on line 1
 help: make these changes and things will work
- on line 1, column 5 replace with: (A::Tuple())
- on line 1, column 7 replace with: bar
+ on line 1, column 5 to column 6 replace with: (A::Tuple())
+ on line 1, column 7 to column 10 replace with: bar
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2246,8 +2246,8 @@ help: make these changes and things will work
 error E0423: Found `ThisIsVeryLong`
  on line 1
 help: make these changes and things will work
- on line 1, column 5 replace with: (A::Tuple())
- on line 1, column 20 replace with: bar
+ on line 1, column 5 to column 19 replace with: (A::Tuple())
+ on line 1, column 20 to column 23 replace with: bar
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2360,7 +2360,7 @@ error E0502: cannot borrow `*self` as mutable because it is also borrowed as imm
  on line 6: immutable borrow later used here
 help: try explicitly pass `&Self` into the Closure as an argument
  on line 2, column 14 add: this: &Self
- on line 3, column 9 replace with: this
+ on line 3, column 9 to column 13 replace with: this
  on line 6, column 7 add: self
 "#]];
     let renderer = renderer.no_graphics(true);
@@ -2466,10 +2466,10 @@ error E0499: cannot borrow `chars` as mutable more than once at a time
  on line 4, column 15: first mutable borrow occurs here
  on line 4, column 15: first borrow later used here
 help: if you want to call `next` on a iterator within the loop, consider using `while let`
- on line 4, column 5 replace with: let iter = chars.by_ref();
+ on line 4, column 5 to column 9 replace with: let iter = chars.by_ref();
     while let Some(
- on line 4, column 11 replace with: ) = iter.next()
- on line 5, column 9 replace with: iter
+ on line 4, column 11 to column 29 replace with: ) = iter.next()
+ on line 5, column 9 to column 14 replace with: iter
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4295,7 +4295,7 @@ error E0571: `break` with value from a `while` loop
  at $DIR/issue-114529-illegal-break-with-value.rs:22:9 to 24:11: can only break with a value inside `loop` or breakable block
   on line 21: you can't `break` with a value in a `while` loop
 suggestion S0123: use `break` on its own without a value inside this `while` loop
- on line 22, column 9 replace with: break
+ on line 22, column 9 to line 24, column 11 replace with: break
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4494,7 +4494,7 @@ warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (du
  note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
  note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 5, column 11 replace with: iter
+ on line 5, column 11 to column 20 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
  on line 5, column 45 add:  // Span after line end
 "#]];
@@ -4600,7 +4600,7 @@ warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (du
  note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
  note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 3, column 11 replace with: iter
+ on line 3, column 11 to column 20 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
  on line 3, column 46 add:  // Span after line end
 "#]];
@@ -4706,9 +4706,9 @@ warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (du
  note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
  note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 3, column 11 replace with: iter
+ on line 3, column 11 to column 20 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
- on line 3, column 46 replace with:  // Span after line end
+ on line 3, column 46 add:  // Span after line end
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4991,7 +4991,7 @@ help: consider specifying the generic argument
 error E0282: type annotations needed
  at $DIR/issue-42234-unknown-receiver-type.rs:12:10: cannot infer type of the type parameter `S` declared on the method `sum`
 help: consider specifying the generic argument
- on line 23, column 13 replace with: ::<GENERIC_ARG>
+ on line 23, column 13 to column 18 replace with: ::<GENERIC_ARG>
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6030,7 +6030,7 @@ help: replace the code
     let expected_no_graphics = str![[r#"
  at /tmp/test.rs:1:5: the code
 help: replace the code
- on line 1 replace with: replaced
+ on line 1, column 5 to column 9 replace with: replaced
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);

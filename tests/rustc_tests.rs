@@ -2876,7 +2876,7 @@ error: `Iterator::map` call that discard the iterator's values
   on line 11, column 22 to line 14, column 6: called `Iterator::map` with callable that returns `()`
  note: `Iterator::map`, like many of the methods on `Iterator`, gets executed lazily, meaning that its effects won't be visible until it is iterated
 help: you might have meant to use `Iterator::for_each`
- on line 11, column 18 replace with: for_each
+ on line 11, column 18 to column 21 replace with: for_each
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -3547,7 +3547,7 @@ error E0532: expected unit struct, unit variant or constant, found tuple variant
 help: use the tuple variant pattern syntax instead
  on line 35, column 15 add: ()
 help: a unit variant with a similar name exists
- on line 35, column 13 replace with: Z0
+ on line 35, column 13 to column 15 replace with: Z0
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -4114,10 +4114,10 @@ warning: this method call resolves to `<&[T; N] as IntoIterator>::into_iter` (du
  note: for more information, see <https://doc.rust-lang.org/nightly/edition-guide/rust-2021/IntoIterator-for-arrays.html>
  note: `#[warn(array_into_iter)]` on by default
 help: use `.iter()` instead of `.into_iter()` to avoid ambiguity
- on line 3, column 11 replace with: iter
+ on line 3, column 11 to column 20 replace with: iter
 help: or use `IntoIterator::into_iter(..)` instead of `.into_iter()` to explicitly iterate by value
  on line 3, column 1 add: IntoIterator::into_iter(
- on line 3, column 10 replace with: )
+ on line 3, column 10 to column 22 replace with: )
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -5846,11 +5846,11 @@ help: you might have meant to use an associated function to build this type
  option 1
   on line 17, column 38 add: ::new
  option 2
-  on line 17, column 38 replace with: ::with_capacity(_)
+  on line 17, column 38 to column 40 replace with: ::with_capacity(_)
  option 3
-  on line 17, column 38 replace with: ::with_hasher(_)
+  on line 17, column 38 to column 40 replace with: ::with_hasher(_)
  option 4
-  on line 17, column 38 replace with: ::with_capacity_and_hasher(_, _)
+  on line 17, column 38 to column 40 replace with: ::with_capacity_and_hasher(_, _)
 help: consider using the `Default` trait
  on line 17, column 13 add: <
  on line 17, column 38 add:  as std::default::Default>::default
@@ -6057,17 +6057,17 @@ note: constructor is not visible here due to private fields
  note: private field
 help: you might have meant to use an associated function to build this type
  option 1
-  on line 11, column 22 replace with: ::new(_)
+  on line 11, column 22 to line 14, column 11 replace with: ::new(_)
  option 2
-  on line 11, column 22 replace with: ::new_uninit()
+  on line 11, column 22 to line 14, column 11 replace with: ::new_uninit()
  option 3
-  on line 11, column 22 replace with: ::new_zeroed()
+  on line 11, column 22 to line 14, column 11 replace with: ::new_zeroed()
  option 4
-  on line 11, column 22 replace with: ::new_in(_, _)
+  on line 11, column 22 to line 14, column 11 replace with: ::new_in(_, _)
 and 12 other candidates
 help: consider using the `Default` trait
  on line 11, column 19 add: <
- on line 11, column 22 replace with:  as std::default::Default>::default()
+ on line 11, column 22 to line 14, column 11 replace with:  as std::default::Default>::default()
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -6573,7 +6573,7 @@ note: expected `usize`, found fn item
 note: associated function defined here
  at $SRC_DIR/alloc/src/string.rs:480:11
 help: remove the extra arguments
- on line 4, column 5 replace with: /* usize */
+ on line 4, column 5 to column 20 replace with: /* usize */
  on line 4, column 20
  on line 7, column 3
 "#]];
