@@ -176,10 +176,14 @@ pub(crate) fn render_no_graphics(
                         let (lo, hi) =
                             sm.span_to_locations(annotation.span.start..annotation.span.end);
 
-                        // On subsequent labels, we don't need to repeat the path. We use
-                        // additional whitespace to imply a nested relationship to the prior
-                        // label.
-                        write!(output, "{}", if i == 0 { " " } else { "  " })?;
+                        // Indent subsequent labels under the first label's file path.
+                        // Without a path, keep all labels at the same indentation.
+                        let padding = if i > 0 && snippet.path.is_some() {
+                            "  "
+                        } else {
+                            " "
+                        };
+                        write!(output, "{padding}")?;
 
                         if i == 0
                             && let Some(path) = &snippet.path

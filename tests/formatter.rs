@@ -572,7 +572,7 @@ error:
     let expected_no_graphics = str![[r#"
 error: 
  on line 1: Example string
-  on line 1: Second line
+ on line 1: Second line
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -1700,7 +1700,7 @@ error: unused optional dependency
     let expected_no_graphics = str![[r#"
 error: unused optional dependency
  on line 4, column 42 to line 7, column 43: I need this to be really long so I can test overlaps
-  on line 4, column 28: This should also be long but not too long
+ on line 4, column 28: This should also be long but not too long
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -1773,8 +1773,8 @@ error: unused optional dependency
     let expected_no_graphics = str![[r#"
 error: unused optional dependency
  on line 4, column 9 to line 7, column 26: I need this to be really long so I can test overlaps
-  on line 4, column 42 to line 7, column 43: I need this to be really long so I can test overlaps
-  on line 4, column 28: This should also be long but not too long
+ on line 4, column 42 to line 7, column 43: I need this to be really long so I can test overlaps
+ on line 4, column 28: This should also be long but not too long
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -1859,9 +1859,9 @@ error: unused optional dependency
     let expected_no_graphics = str![[r#"
 error: unused optional dependency
  on line 4, column 9 to line 7, column 26: I need this to be really long so I can test overlaps
-  on line 4, column 42 to line 7, column 43: I need this to be really long so I can test overlaps
-  on line 5, column 4 to line 8, column 5: I need this to be really long so I can test overlaps
-  on line 4, column 28: This should also be long but not too long
+ on line 4, column 42 to line 7, column 43: I need this to be really long so I can test overlaps
+ on line 5, column 4 to line 8, column 5: I need this to be really long so I can test overlaps
+ on line 4, column 28: This should also be long but not too long
 "#]];
     let renderer = renderer.no_graphics(true);
     assert_data_eq!(renderer.render(input), expected_no_graphics);
@@ -2117,7 +2117,7 @@ help: the following traits which provide `pick` are implemented but not in scope
     let expected_no_graphics = str![[r#"
 error E0599: no method named `pick` found for struct `Chaenomeles` in the current scope
  on line 18, column 25: method not found in `Chaenomeles`
-  on line 3: method `pick` not found for this struct
+ on line 3: method `pick` not found for this struct
 help: the following traits which provide `pick` are implemented but not in scope; perhaps you want to import one of them
  option 1
   on line 2, column 1 add: use banana::Apple;
@@ -2355,9 +2355,9 @@ help: try explicitly pass `&Self` into the Closure as an argument
     let expected_no_graphics = str![[r#"
 error E0502: cannot borrow `*self` as mutable because it is also borrowed as immutable
  on line 2, column 13: immutable borrow occurs here
-  on line 3: first borrow occurs due to use of `*self` in closure
-  on line 5: mutable borrow occurs here
-  on line 6: immutable borrow later used here
+ on line 3: first borrow occurs due to use of `*self` in closure
+ on line 5: mutable borrow occurs here
+ on line 6: immutable borrow later used here
 help: try explicitly pass `&Self` into the Closure as an argument
  on line 2, column 14 add: this: &Self
  on line 3, column 9 replace with: this
@@ -2463,8 +2463,8 @@ help: if you want to call `next` on a iterator within the loop, consider using `
     let expected_no_graphics = str![[r#"
 error E0499: cannot borrow `chars` as mutable more than once at a time
  on line 5: second mutable borrow occurs here
-  on line 4, column 15: first mutable borrow occurs here
-  on line 4, column 15: first borrow later used here
+ on line 4, column 15: first mutable borrow occurs here
+ on line 4, column 15: first borrow later used here
 help: if you want to call `next` on a iterator within the loop, consider using `while let`
  on line 4, column 5 replace with: let iter = chars.by_ref();
     while let Some(
@@ -2661,7 +2661,7 @@ help: consider removing the `?Sized` bound to make the type parameter `Sized`
     let expected_no_graphics = str![[r#"
 error E0277: the size for values of type `T` cannot be known at compilation time
  on line 4, column 16: doesn't have a size known at compile-time
-  on line 4, column 8: this type parameter needs to be `Sized`
+ on line 4, column 8: this type parameter needs to be `Sized`
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
  on line 6, column 1
 "#]];
