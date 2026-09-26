@@ -263,14 +263,15 @@ pub(crate) fn render_no_graphics(
                     let next_is_suggestion =
                         matches!(peek, Some(PreprocessedElement::Suggestion(_)));
 
-                    // We only include the file path when it is different to the
-                    // primary file.
+                    // We only include the file path when it is different from
+                    // the previous suggestion's path, or the primary path
                     //
                     // `at $DIR/file.txt:LL:CC: label`
                     //  ^^^^^^^^^^^^^^^^^
-                    let path = if suggestion.path.as_ref() != primary_path.or(report_primary_path)
+                    let previous_path = last_suggestion_path
+                        .map_or(primary_path.or(report_primary_path), |(path, _)| path);
+                    let path = if suggestion.path.as_ref() != previous_path
                         && let Some(path) = suggestion.path.as_ref()
-                        && last_suggestion_path.map(|(p, _)| p) != Some(suggestion.path.as_ref())
                     {
                         Some(path.as_ref())
                     } else {

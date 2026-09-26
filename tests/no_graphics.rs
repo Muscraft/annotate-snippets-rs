@@ -616,7 +616,7 @@ help: replace the value
  option 3
   on line 1, column 1 to column 6 replace with: other
  option 4
-  on line 1, column 1 to column 6 replace with: other
+  at a.rs:1:1 to column 6 replace with: other
  option 5
   on line 1, column 1 to column 6 replace with: other
 "#]];
